@@ -59,6 +59,16 @@ app.get('/api/temas/busca', async (req, res) => {
   }
 });
 
+app.get('/api/temas', async (req, res) => {
+  try {
+    const resultado = await pool.query('SELECT * FROM temas');
+    res.json(resultado.rows);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Falha ao buscar temas" });
+  }
+});
+
 //inicializacao do server
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
