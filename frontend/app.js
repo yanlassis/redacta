@@ -4,8 +4,9 @@ const searchInput = document.getElementById('searchInput');
 // 2. Capturando o botão de busca
 const searchBtn = document.getElementById('searchBtn');
 
-// 3. Capturando a caixa onde os resultados vão aparecer
+// 3. Capturando a lista de sugestões (Autocomplete) e o painel de resultados
 const resultsContainer = document.getElementById('resultsContainer');
+const suggestList = document.querySelector('.suggest');
 
 const API_URL = 'http://localhost:3000/api/temas/busca';
 
@@ -14,7 +15,10 @@ async function buscarTemas(termo) {
     // Estado de Loading
     searchBtn.disabled = true;
     searchBtn.textContent = 'Buscando...';
-    resultsContainer.innerHTML = '<p>Carregando temas...</p>';
+    
+    // Mostra a lista suspensa e avisa que está carregando, sem apagar o layout de trás!
+    suggestList.style.display = 'block';
+    suggestList.innerHTML = '<li><a href="#"><span>Carregando temas...</span></a></li>';
 
     try {
         const url = termo ? `${API_URL}?q=${encodeURIComponent(termo)}` : API_URL;
@@ -28,7 +32,7 @@ async function buscarTemas(termo) {
 
         // Estado de Sucesso ou Vazio
         if (data.length === 0) {
-            resultsContainer.innerHTML = '<p>Nenhum tema encontrado para essa busca.</p>';
+            suggestList.innerHTML = '<li><a href="#"><span>Nenhum tema encontrado.</span></a></li>';
         } else {
             renderizarCards(data);
         }
@@ -36,7 +40,7 @@ async function buscarTemas(termo) {
     } catch (error) {
         console.error("Erro ao buscar temas:", error);
         // Estado de Erro
-        resultsContainer.innerHTML = '<p>Ocorreu um erro ao buscar os temas. Tente novamente mais tarde.</p>';
+        suggestList.innerHTML = '<li><a href="#"><span>Erro ao buscar os temas.</span></a></li>';
     } finally {
         // Restaurar estado do botão
         searchBtn.disabled = false;
@@ -44,36 +48,54 @@ async function buscarTemas(termo) {
     }
 }
 
-// Função para renderizar os cards programaticamente
+// Função para renderizar as sugestões programaticamente
 function renderizarCards(temas) {
-    resultsContainer.innerHTML = ''; // Limpar resultados anteriores
+    suggestList.innerHTML = ''; // Limpar resultados anteriores
 
     temas.forEach(tema => {
-        const card = document.createElement('div');
-        card.className = 'card'; 
+        const li = document.createElement('li');
         
-        const titulo = document.createElement('h3');
-        titulo.textContent = tema.titulo;
+        // Coloca o título vindo do banco e uma tag fictícia de eixos
+        li.innerHTML = `<a href="#"><span>${tema.titulo}</span><span class="meta">Novo!</span></a>`;
         
-        const eixo = document.createElement('p');
-        eixo.innerHTML = `<strong>Eixo:</strong> ${tema.eixo}`;
-
-        card.appendChild(titulo);
-        card.appendChild(eixo);
-        
-        resultsContainer.appendChild(card);
+        suggestList.appendChild(li);
     });
 }
 
-// Event Listeners
-searchBtn.addEventListener('click', () => {
+// Variável para evitar que o JS vá no banco de dados a cada milissegundo (Debounce)
+let timeoutId;
+
+// Event Listener para quando o usuário digita
+searchInput.addEventListener('input', (e) => {
+    const termo = e.target.value.trim();
+
+    // Se o usuário apagar tudo, escondemos a lista
+    if (termo === '') {
+        suggestList.innerHTML = '';
+        suggestList.style.display = 'none';
+        return;
+    }
+
+    // Cancelamos a busca anterior se ele ainda está digitando
+    clearTimeout(timeoutId);
+
+    // Esperamos 300ms após ele parar de digitar para ir no banco
+    timeoutId = setTimeout(() => {
+        buscarTemas(termo);
+    }, 300);
+});
+
+// Mantemos o evento de click e enter (caso o usuário aperte o enter ansioso ou clique na lupa)
+searchBtn.addEventListener('click', (e) => {
+    e.preventDefault();
     const termo = searchInput.value.trim();
-    buscarTemas(termo);
+    if(termo) buscarTemas(termo);
 });
 
 searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
+        e.preventDefault();
         const termo = searchInput.value.trim();
-        buscarTemas(termo);
+        if(termo) buscarTemas(termo);
     }
 });

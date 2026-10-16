@@ -167,7 +167,6 @@
     border-radius: 10px;
     box-shadow: 0 12px 30px rgba(22, 33, 58, .14);
   }
-  .search:focus-within .suggest { display: block; }
   .suggest a {
     display: flex;
     justify-content: space-between;
@@ -394,13 +393,10 @@
   <form class="search" role="search" onsubmit="return false">
     <div class="field">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input type="search" id="q" name="q" value="desinformação" placeholder="Qual é o tema da redação?" autocomplete="off" aria-label="Pesquisar tema de redação">
-      <button type="submit">Buscar</button>
+      <input type="search" id="searchInput" name="q" value="desinformação" placeholder="Qual é o tema da redação?" autocomplete="off" aria-label="Pesquisar tema de redação">
+      <button type="submit" id="searchBtn">Buscar</button>
     </div>
     <ul class="suggest" aria-label="Temas sugeridos">
-      <li><a href="#" aria-current="true"><span>Desafios para o combate à <mark>desinformação</mark> no Brasil</span><span class="meta">4 eixos</span></a></li>
-      <li><a href="#"><span><mark>Desinformação</mark> científica e a queda da cobertura vacinal</span><span class="meta">3 eixos</span></a></li>
-      <li><a href="#"><span>Letramento digital como resposta à <mark>desinformação</mark> entre idosos</span><span class="meta">3 eixos</span></a></li>
     </ul>
   </form>
   <p class="hint">Os resultados aparecem enquanto você digita.</p>
@@ -436,7 +432,7 @@
 
   <!-- RESULTADO: um Tema, com seus Eixos, Argumentos e Repertórios
        No produto: GET /api/temas/:id retornando eixos[] com argumentos[] e repertorios[] -->
-  <div class="resultado">
+  <div class="resultado" id="resultsContainer">
 
     <header class="tema" data-tema-id="1">
       <h1>Desafios para o combate à <mark>desinformação</mark> no Brasil</h1>
@@ -627,4 +623,5 @@
   });
 </script>
 </body>
+<script src="app.js"></script>
 </html>
