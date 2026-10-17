@@ -115,7 +115,22 @@ const MAPA_SEMANTICO_EIXOS = {
     'detento', 'detentos', 'preso', 'presos', 'ressocializacao', 'reincidencia', 'penal',
     'justica', 'judiciario', 'lei', 'leis', 'impunidade', 'democracia', 'democratico',
     'politica', 'politico', 'parlamento', 'eleicao', 'eleicoes', 'voto', 'representatividade',
-    'corrupcao', 'estado', 'direito', 'constitucional', 'stf', 'direitos', 'milicia', 'faccao'
+    'corrupcao', 'estado', 'direito', 'constitucional', 'stf', 'direitos', 'milicia', 'faccao',
+    'desaparecido', 'desaparecidos', 'jornalismo', 'imprensa', 'restaurativa'
+  ],
+  9: [ // Infância, Juventude e Relações Familiares
+    'infancia', 'infantil', 'crianca', 'criancas', 'adolescente', 'adolescentes', 'adolescencia',
+    'juventude', 'jovem', 'jovens', 'familia', 'familiar', 'familiares', 'paterno', 'paternidade',
+    'pai', 'mae', 'maes', 'solo', 'maternidade', 'gravidez', 'precoce', 'orfandade', 'orfao',
+    'orfaos', 'adocao', 'abrigo', 'acolhimento', 'parental', 'isolamento', 'hikikomori', 'brincar',
+    'eca', 'estatuto', 'menor', 'menores'
+  ],
+  10: [ // Mobilidade Urbana, Habitação e Direito à Cidade
+    'mobilidade', 'urbana', 'urbano', 'urbanas', 'urbanos', 'cidade', 'cidades', 'metropole',
+    'metropoles', 'transporte', 'onibus', 'metro', 'tarifa', 'zero', 'transito', 'motociclista',
+    'motociclistas', 'moto', 'acidente', 'sinistro', 'habitacao', 'habitacional', 'moradia',
+    'teto', 'aluguel', 'gentrificacao', 'imobiliaria', 'especulacao', 'imovel', 'imoveis',
+    'calor', 'arborizacao', 'arvore', 'arvores', 'iluminacao', 'calcada', 'espaco', 'publico'
   ]
 };
 
