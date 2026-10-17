@@ -89,7 +89,7 @@ app.get('/api/temas', async (req, res) => {
     `);
 
     const repsRes = await pool.query(`
-      SELECT DISTINCT ta.tema_id, r.id, r.categoria, r.conteudo, ar.argumento_id
+      SELECT DISTINCT ta.tema_id, r.id, r.categoria, r.conteudo
       FROM repertorios r
       JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
       JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
@@ -103,7 +103,7 @@ app.get('/api/temas', async (req, res) => {
         .map(({ id, descricao }) => ({ id, descricao })),
       repertorios: repsRes.rows
         .filter(r => r.tema_id === tema.id)
-        .map(({ id, categoria, conteudo, argumento_id }) => ({ id, categoria, conteudo, argumento_id }))
+        .map(({ id, categoria, conteudo }) => ({ id, categoria, conteudo }))
     }));
 
     res.json(temasCompletos);
@@ -145,7 +145,7 @@ app.get('/api/temas/:id', async (req, res) => {
     );
 
     const repsRes = await pool.query(
-      `SELECT DISTINCT r.id, r.categoria, r.conteudo, ar.argumento_id
+      `SELECT DISTINCT r.id, r.categoria, r.conteudo
        FROM repertorios r
        JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
        JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
