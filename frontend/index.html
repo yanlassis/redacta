@@ -1,21 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eixo Redação</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Eixo Redação</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Pesquisa de Temas</h1>
 
-    <input type="text" id="searchInput" placeholder="Digite um tema (ex: tecnologia)">
+<header class="top">
+  <div class="top-left">
+    <a class="brand" id="brandHome" href="#">Eixo Redação</a>
+    <p class="tagline">Argumentos e repertórios organizados por eixo temático</p>
+  </div>
+  <button type="button" class="btn-home" id="btnVerTodos" style="display: none;">Ver todos os temas</button>
+</header>
 
-    <button id="searchBtn">Buscar</button>
+<div class="search-wrap">
+  <form class="search" role="search" onsubmit="return false">
+    <div class="field">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/>
+        <path d="m20 20-3.5-3.5"/>
+      </svg>
+      <input
+        type="search"
+        id="searchInput"
+        name="q"
+        placeholder="Pesquisar tema, eixo, argumento ou repertório..."
+        autocomplete="off"
+        aria-label="Pesquisar tema de redação"
+      >
+      <button type="submit" id="searchBtn">Buscar</button>
+    </div>
+    <ul class="suggest" id="suggestList" aria-label="Temas sugeridos"></ul>
+  </form>
+  <p class="hint">Dados carregados diretamente do banco de dados em tempo real.</p>
+</div>
 
-    <div id="resultsContainer"></div>
+<main class="layout page">
+  <!-- BARRA LATERAL DINÂMICA: alimentada por /api/eixos e /api/categorias -->
+  <aside class="side">
+    <nav aria-label="Eixos temáticos">
+      <h2 class="side-title">Eixos Temáticos</h2>
+      <ul class="index" id="eixosNavList">
+        <li><span class="qtd">Carregando eixos...</span></li>
+      </ul>
+    </nav>
 
-    <script src="app.js"></script>
+    <fieldset class="filtro">
+      <legend class="side-title">Categoria de Repertório</legend>
+      <div class="chips" id="categoriasChips">
+        <button type="button" class="chip active" data-categoria="todas">Todas</button>
+      </div>
+    </fieldset>
+  </aside>
 
+  <!-- CONTEÚDO PRINCIPAL DINÂMICO: alimentado por /api/temas e /api/temas/:id -->
+  <div class="resultado" id="resultsContainer">
+    <div class="empty-state">Carregando dados do banco de dados...</div>
+  </div>
+</main>
 
+<footer class="foot">
+  Eixo Redação — Conectado ao banco de dados Supabase.
+</footer>
+
+<script src="app.js"></script>
 </body>
 </html>
