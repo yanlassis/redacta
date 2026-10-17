@@ -57,56 +57,26 @@ async function inicializarLandingPage() {
   }
 }
 
-// 2. Calcula contagens reais com base exatamente nos temas visíveis/filtrados e renderiza a barra lateral
-function renderizarMenuEixos(temasBase = todosTemas) {
+// 2. Renderiza a barra lateral exibindo apenas os Eixos
+function renderizarMenuEixos() {
   if (!eixosNavList) return;
   eixosNavList.innerHTML = '';
-
-  // Filtra repertórios conforme a categoria ativa para que a barra lateral bata 100% com a tela
-  const calcularTotaisDeTemas = (listaTemas) => {
-    let argsCount = 0;
-    let repsCount = 0;
-    listaTemas.forEach(t => {
-      const repsDoTema = (t.repertorios || []).filter(r =>
-        categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
-      );
-      if (categoriaSelecionada !== 'todas' && repsDoTema.length === 0 && listaTemas.length > 1) {
-        return;
-      }
-      argsCount += (t.argumentos || []).length;
-      repsCount += repsDoTema.length;
-    });
-    return { argsCount, repsCount, temasCount: listaTemas.length };
-  };
-
-  // Totais gerais de todos os temas do catálogo (respeitando filtro de categoria)
-  const totaisCatalogo = calcularTotaisDeTemas(todosTemas);
 
   // Item "Todos os eixos"
   const liTodos = document.createElement('li');
   liTodos.innerHTML = `
     <a href="#" data-eixo-id="todos" class="${eixoSelecionadoId === null ? 'active' : ''}">
-      <span class="nome">Todos os eixos (${totaisCatalogo.temasCount} temas)</span>
-      <span class="qtd">${totaisCatalogo.argsCount} argumento(s), ${totaisCatalogo.repsCount} repertório(s)</span>
+      <span class="nome">Todos os eixos</span>
     </a>
   `;
   eixosNavList.appendChild(liTodos);
 
   todosEixos.forEach(eixo => {
-    // Se estamos vendo apenas 1 tema específico daquele eixo, mostra a contagem daquele tema;
-    // caso contrário, mostra a contagem real somada dos temas daquele eixo na tela
-    const temasDoEixoVisiveis = temasBase.filter(t => t.eixo_id === eixo.id);
-    const temasDoEixoCatalogo = todosTemas.filter(t => t.eixo_id === eixo.id);
-    const baseParaCalculo = temasDoEixoVisiveis.length > 0 ? temasDoEixoVisiveis : temasDoEixoCatalogo;
-
-    const { argsCount, repsCount, temasCount } = calcularTotaisDeTemas(baseParaCalculo);
-
     const li = document.createElement('li');
     const isAtivo = eixoSelecionadoId === eixo.id ? 'active' : '';
     li.innerHTML = `
       <a href="#eixo-${eixo.id}" data-eixo-id="${eixo.id}" class="${isAtivo}">
-        <span class="nome">${eixo.nome} (${temasCount} ${temasCount === 1 ? 'tema' : 'temas'})</span>
-        <span class="qtd">${argsCount} argumento(s), ${repsCount} repertório(s)</span>
+        <span class="nome">${eixo.nome}</span>
       </a>
     `;
     eixosNavList.appendChild(li);
