@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eixo Redação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Tokens ---------- */
+  :root {
+    --bg: #F4F6F9;
+    --surface: #FFFFFF;
+    --ink: #16213A;
+    --soft: #4A5468;
+    --line: #D5DAE3;
+    --accent: #2540C8;
+    --mark: #FFE66D;
+    --mark-ink: #16213A;
+
+    /* Cor por tipo de repertório */
+    --c-filosofia: #6B4FA3;
+    --c-sociologia: #0F7C7A;
+    --c-literatura: #A23A5E;
+    --c-legislacao: #2F5DA8;
+    --c-comunicacao: #85690A;
+    --c-audiovisual: #B83A2E;
+
+    --serif: "Newsreader", Georgia, "Times New Roman", serif;
+    --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F1626;
+      --surface: #172036;
+      --ink: #E7ECF5;
+      --soft: #A9B3C7;
+      --line: #2B3752;
+      --accent: #8FA5FF;
+      --c-filosofia: #B7A0F0;
+      --c-sociologia: #5FD0CC;
+      --c-literatura: #F08CAE;
+      --c-legislacao: #8DB4F5;
+      --c-comunicacao: #E2C25A;
+      --c-audiovisual: #F0897D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F1626;
+    --surface: #172036;
+    --ink: #E7ECF5;
+    --soft: #A9B3C7;
+    --line: #2B3752;
+    --accent: #8FA5FF;
+    --c-filosofia: #B7A0F0;
+    --c-sociologia: #5FD0CC;
+    --c-literatura: #F08CAE;
+    --c-legislacao: #8DB4F5;
+    --c-comunicacao: #E2C25A;
+    --c-audiovisual: #F0897D;
+  }
+
+  /* ---------- Base ---------- */
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 1rem); }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  a { color: inherit; }
+  mark {
+    background: var(--mark);
+    color: var(--mark-ink);
+    padding: 0 .15em;
+    border-radius: 2px;
+  }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Cabeçalho e busca ---------- */
+  .top, .search-wrap, .layout, .foot {
+    max-width: 1120px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  .top {
+    padding-top: 1.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    text-decoration: none;
+  }
+  .tagline { margin: 0; color: var(--soft); font-size: .9rem; }
+
+  .search-wrap { padding-top: 1.5rem; }
+  .search { position: relative; }
+  .field {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    background: var(--surface);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: .35rem .35rem .35rem 1rem;
+  }
+  .field:focus-within { border-color: var(--accent); outline: 3px solid var(--accent); outline-offset: 2px; }
+  .field svg { flex: none; color: var(--soft); }
+  .field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    padding: .5rem 0;
+  }
+  .field input:focus-visible { outline: none; }
+  .field input::placeholder { color: var(--soft); }
+  .field button {
+    flex: none;
+    font: inherit;
+    font-weight: 600;
+    background: var(--ink);
+    color: var(--bg);
+    border: 0;
+    border-radius: 8px;
+    padding: .7rem 1.25rem;
+    cursor: pointer;
+  }
+  .hint { margin: .6rem 0 0; color: var(--soft); font-size: .9rem; }
+
+  /* Sugestões em tempo real: aparecem ao focar a busca (no produto, vêm da API) */
+  .suggest {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + .35rem);
+    z-index: 5;
+    list-style: none;
+    margin: 0;
+    padding: .35rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(22, 33, 58, .14);
+  }
+  .suggest a {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .65rem .75rem;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  .suggest a:hover, .suggest a[aria-current="true"] { background: var(--bg); }
+  .suggest .meta { flex: none; color: var(--soft); font-size: .85rem; }
+
+  /* ---------- Layout principal ---------- */
+  .layout {
+    margin-top: 2.25rem;
+    margin-bottom: 3rem;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 3rem;
+    align-items: start;
+  }
+  .side {
+    position: sticky;
+    top: calc(1rem + env(safe-area-inset-top, 0px));
+  }
+  .side-title {
+    margin: 0 0 .6rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--soft);
+  }
+  .index { list-style: none; margin: 0 0 1.75rem; padding: 0; }
+  .index a {
+    display: block;
+    padding: .55rem .75rem;
+    border-left: 3px solid var(--line);
+    text-decoration: none;
+  }
+  .index a:hover { border-left-color: var(--accent); background: var(--surface); }
+  .index .nome { display: block; font-weight: 500; }
+  .index .qtd { display: block; color: var(--soft); font-size: .85rem; }
+
+  fieldset.filtro { border: 0; margin: 0; padding: 0; min-width: 0; }
+  fieldset.filtro legend { padding: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .chip {
+    display: inline-block;
+    padding: .3rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: .85rem;
+    cursor: pointer;
+  }
+  .chip:hover { border-color: var(--ink); }
+  .sr:checked + .chip { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .sr:focus-visible + .chip { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* Filtro de repertórios por tipo (CSS puro; no produto pode virar JS) */
+  .page:has(#f-filosofia:checked) .rep:not([data-tipo="filosofia"]),
+  .page:has(#f-sociologia:checked) .rep:not([data-tipo="sociologia"]),
+  .page:has(#f-literatura:checked) .rep:not([data-tipo="literatura"]),
+  .page:has(#f-legislacao:checked) .rep:not([data-tipo="legislacao"]),
+  .page:has(#f-comunicacao:checked) .rep:not([data-tipo="comunicacao"]),
+  .page:has(#f-audiovisual:checked) .rep:not([data-tipo="audiovisual"]) { display: none; }
+
+  /* ---------- Tema ---------- */
+  .tema h1 {
+    font-family: var(--serif);
+    font-size: clamp(1.9rem, 4vw, 2.75rem);
+    line-height: 1.12;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    margin: 0 0 .85rem;
+    max-width: 24ch;
+  }
+  .tema .contexto {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: var(--soft);
+    margin: 0 0 1.1rem;
+    max-width: 60ch;
+  }
+  .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: .95rem;
+    color: var(--soft);
+  }
+  .counts strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Eixos ---------- */
+  .eixo {
+    border-top: 2px solid var(--ink);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+  }
+  .eixo h2 {
+    font-family: var(--serif);
+    font-size: 1.75rem;
+    line-height: 1.2;
+    margin: 0;
+  }
+  .eixo-sub { color: var(--soft); margin: .25rem 0 1.75rem; }
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+  .col-title {
+    margin: 0 0 1.25rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--line);
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--soft);
+  }
+
+  /* Argumentos: texto corrido, sem cartões */
+  .arg {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .arg:last-child { border-bottom: 0; margin-bottom: 0; }
+  .tese {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 .5rem;
+  }
+  .desenv {
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    line-height: 1.65;
+    margin: 0 0 .85rem;
+    max-width: 62ch;
+  }
+
+  /* Repertórios: a borda lateral colorida indica o tipo */
+  .rep {
+    --tipo: var(--soft);
+    border-left: 4px solid var(--tipo);
+    padding: .15rem 0 .15rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .rep:last-child { margin-bottom: 0; }
+  .rep[data-tipo="filosofia"]   { --tipo: var(--c-filosofia); }
+  .rep[data-tipo="sociologia"]  { --tipo: var(--c-sociologia); }
+  .rep[data-tipo="literatura"]  { --tipo: var(--c-literatura); }
+  .rep[data-tipo="legislacao"]  { --tipo: var(--c-legislacao); }
+  .rep[data-tipo="comunicacao"] { --tipo: var(--c-comunicacao); }
+  .rep[data-tipo="audiovisual"] { --tipo: var(--c-audiovisual); }
+  .rep-tipo { font-size: .85rem; font-weight: 600; color: var(--tipo); margin: 0; }
+  .rep-title {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: .1rem 0 .4rem;
+  }
+  .rep-desc { margin: 0 0 .5rem; font-size: .95rem; }
+  .rep-uso { margin: 0 0 .7rem; font-size: .9rem; color: var(--soft); }
+  .rep-uso strong { color: var(--ink); font-weight: 600; }
+
+  .copy {
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--soft);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .25rem .7rem;
+    cursor: pointer;
+  }
+  .copy:hover { border-color: var(--accent); color: var(--accent); }
+
+  .foot { padding-bottom: 2rem; color: var(--soft); font-size: .85rem; }
+
+  /* ---------- Telas menores ---------- */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 1.75rem; }
+    .side { position: static; }
+    .index {
+      display: flex;
+      gap: .5rem;
+      overflow-x: auto;
+      padding-bottom: .5rem;
+      margin-bottom: 1.25rem;
+    }
+    .index a { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); white-space: nowrap; }
+    .cols { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+    .field input { font-size: 1.1rem; }
+    .field button { padding: .7rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#">Pauta</a>
+  <p class="tagline">Argumentos e repertórios organizados por tema de redação</p>
+</header>
+
+<!-- BUSCA
+     No produto: ao digitar, chamar GET /api/temas?q=... (com debounce) e preencher .suggest.
+     Aqui, clique no campo para ver as sugestões de exemplo. -->
+<div class="search-wrap">
+  <form class="search" role="search" onsubmit="return false">
+    <div class="field">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="searchInput" name="q" value="desinformação" placeholder="Qual é o tema da redação?" autocomplete="off" aria-label="Pesquisar tema de redação">
+      <button type="submit" id="searchBtn">Buscar</button>
+    </div>
+    <ul class="suggest" aria-label="Temas sugeridos">
+    </ul>
+  </form>
+  <p class="hint">Os resultados aparecem enquanto você digita.</p>
+</div>
+
+<main class="layout page">
+
+  <!-- BARRA LATERAL: índice dos eixos + filtro de repertórios -->
+  <aside class="side">
+    <nav aria-label="Eixos do tema">
+      <h2 class="side-title">Eixos deste tema</h2>
+      <ul class="index">
+        <li><a href="#eixo-educacional"><span class="nome">Educacional</span><span class="qtd">2 argumentos, 2 repertórios</span></a></li>
+        <li><a href="#eixo-juridico"><span class="nome">Político-jurídico</span><span class="qtd">2 argumentos, 2 repertórios</span></a></li>
+        <li><a href="#eixo-tecnologico"><span class="nome">Tecnológico</span><span class="qtd">2 argumentos, 2 repertórios</span></a></li>
+        <li><a href="#eixo-social"><span class="nome">Social e cultural</span><span class="qtd">2 argumentos, 2 repertórios</span></a></li>
+      </ul>
+    </nav>
+
+    <fieldset class="filtro">
+      <legend class="side-title">Tipo de repertório</legend>
+      <div class="chips">
+        <input class="sr" type="radio" name="tipo" id="f-todos" checked><label class="chip" for="f-todos">Todos</label>
+        <input class="sr" type="radio" name="tipo" id="f-filosofia"><label class="chip" for="f-filosofia">Filosofia</label>
+        <input class="sr" type="radio" name="tipo" id="f-sociologia"><label class="chip" for="f-sociologia">Sociologia</label>
+        <input class="sr" type="radio" name="tipo" id="f-literatura"><label class="chip" for="f-literatura">Literatura</label>
+        <input class="sr" type="radio" name="tipo" id="f-legislacao"><label class="chip" for="f-legislacao">Legislação</label>
+        <input class="sr" type="radio" name="tipo" id="f-comunicacao"><label class="chip" for="f-comunicacao">Comunicação</label>
+        <input class="sr" type="radio" name="tipo" id="f-audiovisual"><label class="chip" for="f-audiovisual">Audiovisual</label>
+      </div>
+    </fieldset>
+  </aside>
+
+  <!-- RESULTADO: um Tema, com seus Eixos, Argumentos e Repertórios
+       No produto: GET /api/temas/:id retornando eixos[] com argumentos[] e repertorios[] -->
+  <div class="resultado" id="resultsContainer">
+
+    <header class="tema" data-tema-id="1">
+      <h1>Desafios para o combate à <mark>desinformação</mark> no Brasil</h1>
+      <p class="contexto">Como a circulação acelerada de conteúdo falso afeta o debate público e o que cabe à escola, ao Estado, às plataformas e à sociedade para enfrentá-la.</p>
+      <ul class="counts">
+        <li><strong>4</strong> eixos</li>
+        <li><strong>8</strong> argumentos</li>
+        <li><strong>8</strong> repertórios</li>
+      </ul>
+    </header>
+
+    <!-- EIXO 1 -->
+    <section class="eixo" id="eixo-educacional" aria-labelledby="t-educacional" data-eixo-id="1">
+      <h2 id="t-educacional">Eixo educacional</h2>
+      <p class="eixo-sub">Educação midiática e pensamento crítico</p>
+      <div class="cols">
+        <div>
+          <h3 class="col-title">Argumentos</h3>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>A escola ainda forma leitores de texto, mas pouco leitores de fontes.</h4>
+            <p class="desenv" data-part>Sem o hábito de verificar autoria, data e origem de uma informação, o estudante tende a compartilhar o que confirma suas crenças. Incluir a educação midiática no currículo reduz essa vulnerabilidade desde a base.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>Adultos e idosos também precisam ser alcançados.</h4>
+            <p class="desenv" data-part>A desinformação circula entre gerações, e muitos adultos não tiveram formação para avaliar conteúdo digital. Campanhas públicas e projetos comunitários de letramento digital ampliam a solução para além da sala de aula.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+        <div>
+          <h3 class="col-title">Repertórios</h3>
+          <article class="rep" data-tipo="filosofia" data-copyable>
+            <p class="rep-tipo">Filosofia</p>
+            <h4 class="rep-title" data-part>Paulo Freire: a leitura do mundo</h4>
+            <p class="rep-desc" data-part>Para Freire, a leitura do mundo precede a leitura da palavra, e educar é formar quem interpreta criticamente a realidade.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> relacione ao dever da escola de preparar sujeitos capazes de analisar o que consomem.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="rep" data-tipo="legislacao" data-copyable>
+            <p class="rep-tipo">Legislação</p>
+            <h4 class="rep-title" data-part>Constituição Federal de 1988, art. 205</h4>
+            <p class="rep-desc" data-part>A educação visa ao pleno desenvolvimento da pessoa, ao preparo para a cidadania e à qualificação para o trabalho.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> mostre que formar para a cidadania inclui formar para o ambiente digital.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- EIXO 2 -->
+    <section class="eixo" id="eixo-juridico" aria-labelledby="t-juridico" data-eixo-id="2">
+      <h2 id="t-juridico">Eixo político-jurídico</h2>
+      <p class="eixo-sub">Responsabilização e regulação</p>
+      <div class="cols">
+        <div>
+          <h3 class="col-title">Argumentos</h3>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>A legislação avançou, mas a fiscalização ainda é frágil.</h4>
+            <p class="desenv" data-part>O Marco Civil da Internet estabeleceu princípios para o uso da rede no país, porém sua aplicação depende de órgãos com estrutura e rapidez. Sem isso, conteúdos falsos se espalham antes de qualquer resposta.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>Combater a desinformação exige equilibrar liberdade de expressão e proteção da coletividade.</h4>
+            <p class="desenv" data-part>A Constituição garante a livre manifestação do pensamento, mas esse direito convive com a proteção da honra e do debate democrático. Regras claras e transparentes evitam tanto a omissão quanto a censura arbitrária.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+        <div>
+          <h3 class="col-title">Repertórios</h3>
+          <article class="rep" data-tipo="legislacao" data-copyable>
+            <p class="rep-tipo">Legislação</p>
+            <h4 class="rep-title" data-part>Marco Civil da Internet (Lei nº 12.965/2014)</h4>
+            <p class="rep-desc" data-part>Estabelece princípios, direitos e deveres para o uso da internet no Brasil.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> cite como base legal e aponte a distância entre a norma e sua aplicação.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="rep" data-tipo="literatura" data-copyable>
+            <p class="rep-tipo">Literatura</p>
+            <h4 class="rep-title" data-part>George Orwell, 1984</h4>
+            <p class="rep-desc" data-part>O Ministério da Verdade reescreve registros para controlar o que a sociedade acredita ser real.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> alerte para o risco de a manipulação da informação servir como instrumento de poder.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- EIXO 3 -->
+    <section class="eixo" id="eixo-tecnologico" aria-labelledby="t-tecnologico" data-eixo-id="3">
+      <h2 id="t-tecnologico">Eixo tecnológico</h2>
+      <p class="eixo-sub">Plataformas e algoritmos</p>
+      <div class="cols">
+        <div>
+          <h3 class="col-title">Argumentos</h3>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>Algoritmos priorizam o engajamento, não a veracidade.</h4>
+            <p class="desenv" data-part>Conteúdos que provocam emoção forte tendem a receber mais alcance, o que favorece boatos e discursos extremos. Cabe às plataformas dar mais transparência aos critérios que organizam o que cada usuário vê.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>As bolhas de informação reduzem o contato com ideias divergentes.</h4>
+            <p class="desenv" data-part>Ao mostrar apenas o que combina com o histórico do usuário, as redes reforçam convicções prévias. Com menos contraponto, cresce a polarização e diminui a capacidade de diálogo.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+        <div>
+          <h3 class="col-title">Repertórios</h3>
+          <article class="rep" data-tipo="comunicacao" data-copyable>
+            <p class="rep-tipo">Comunicação</p>
+            <h4 class="rep-title" data-part>Eli Pariser, O filtro invisível (2011)</h4>
+            <p class="rep-desc" data-part>Descreve como a personalização da internet isola cada pessoa em uma bolha de informação.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> explique por que dois usuários podem ver realidades diferentes sobre o mesmo fato.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="rep" data-tipo="audiovisual" data-copyable>
+            <p class="rep-tipo">Audiovisual</p>
+            <h4 class="rep-title" data-part>O Dilema das Redes (2020)</h4>
+            <p class="rep-desc" data-part>Documentário que expõe como o modelo de negócio das plataformas disputa a atenção dos usuários.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> ilustre a lógica de engajamento por trás dos algoritmos.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- EIXO 4 -->
+    <section class="eixo" id="eixo-social" aria-labelledby="t-social" data-eixo-id="4">
+      <h2 id="t-social">Eixo social e cultural</h2>
+      <p class="eixo-sub">Pós-verdade e vínculos sociais</p>
+      <div class="cols">
+        <div>
+          <h3 class="col-title">Argumentos</h3>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>Crenças pessoais passam a pesar mais que fatos verificáveis.</h4>
+            <p class="desenv" data-part>Na chamada pós-verdade, o apelo emocional e a identidade de grupo influenciam a opinião mais do que dados comprovados. Isso enfraquece a confiança em instituições como a imprensa, a ciência e a escola.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="arg" data-copyable>
+            <h4 class="tese" data-part>A velocidade do consumo de informação dificulta a reflexão.</h4>
+            <p class="desenv" data-part>Manchetes e vídeos curtos incentivam o compartilhamento imediato, antes de qualquer checagem. O hábito de reagir rápido substitui o de verificar com calma.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+        <div>
+          <h3 class="col-title">Repertórios</h3>
+          <article class="rep" data-tipo="filosofia" data-copyable>
+            <p class="rep-tipo">Filosofia</p>
+            <h4 class="rep-title" data-part>Hannah Arendt, Verdade e política</h4>
+            <p class="rep-desc" data-part>Defende que a verdade factual é frágil diante do poder de quem deseja distorcê-la.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> mostre que proteger os fatos é condição para um debate público saudável.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+          <article class="rep" data-tipo="sociologia" data-copyable>
+            <p class="rep-tipo">Sociologia</p>
+            <h4 class="rep-title" data-part>Zygmunt Bauman, modernidade líquida</h4>
+            <p class="rep-desc" data-part>Caracteriza uma sociedade de vínculos e referências instáveis, em que tudo muda com rapidez.</p>
+            <p class="rep-uso"><strong>Como usar:</strong> relacione à instabilidade das informações e à pressa de consumir e compartilhar.</p>
+            <button class="copy" type="button">Copiar</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="foot">
+  Pré-visualização estática com conteúdo de exemplo. Verifique as referências antes de usá-las em uma redação.
+</footer>
+
+<script>
+  // Copiar argumento ou repertório (única interação em JS neste protótipo)
+  document.addEventListener('click', async function (e) {
+    var btn = e.target.closest('.copy');
+    if (!btn) return;
+    var box = btn.closest('[data-copyable]');
+    var text = Array.prototype.map.call(box.querySelectorAll('[data-part]'), function (n) {
+      return n.textContent.trim();
+    }).join('\n');
+    var original = btn.textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = 'Copiado';
+    } catch (err) {
+      btn.textContent = 'Não foi possível copiar';
+    }
+    setTimeout(function () { btn.textContent = original; }, 1600);
+  });
+</script>
+</body>
+<script src="app.js"></script>
+</html>
