@@ -7,6 +7,7 @@ const eixosNavList = document.getElementById('eixosNavList');
 const categoriasChips = document.getElementById('categoriasChips');
 const brandHome = document.getElementById('brandHome');
 const btnVerTodos = document.getElementById('btnVerTodos');
+const btnLimparCategoria = document.getElementById('btnLimparCategoria');
 const themeToggle = document.getElementById('themeToggle');
 
 // Inicializa o tema (claro / escuro) com base na preferência salva ou do sistema
@@ -42,8 +43,76 @@ let eixoSelecionadoId = null;
 let categoriaSelecionada = 'todas';
 let timeoutId = null;
 
-const COPY_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><rect x="9" y="9" width="11" height="11"/><path d="M5 15H4V4h11v1"/></svg>`;
-const CHECK_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
+// Ícones SVG de Cópia e Confirmação
+const COPY_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const CHECK_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+// Ícones SVG para o menu lateral de Eixos
+function obterIconeEixo(nome = '') {
+  const n = normalizarTipo(nome);
+  if (n.includes('educacao')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+  }
+  if (n.includes('cidadania') || n.includes('direito')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M3 10h18"/><polygon points="12 3 20 7 4 7"/><path d="M5 10v11M9 10v11M15 10v11M19 10v11"/></svg>`;
+  }
+  if (n.includes('tecnologia') || n.includes('comunicacao')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
+  }
+  if (n.includes('ambiente') || n.includes('sustentabilidade')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
+  }
+  if (n.includes('saude')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+  }
+  if (n.includes('cultura') || n.includes('identidade')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
+  }
+  if (n.includes('trabalho') || n.includes('economia')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
+  }
+  if (n.includes('seguranca') || n.includes('violencia')) {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+// Ícones SVG ilustrados para os cards de Categorias (seguindo a referência visual)
+function obterIconeCategoria(categoria = '') {
+  const c = normalizarTipo(categoria);
+  if (c.includes('filosofia') || c.includes('psiquiatria')) {
+    // Cabeça pensante / mente
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2A6.5 6.5 0 0 0 3 8.5c0 2.3 1.2 4.3 3 5.5v4a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-2h1.5a2.5 2.5 0 0 0 2.5-2.5V11l1.5-1.5L18 6.5A6.5 6.5 0 0 0 9.5 2Z"/><circle cx="10" cy="8" r="1.5"/></svg>`;
+  }
+  if (c.includes('sociologia') || c.includes('antropologia') || c.includes('saude')) {
+    // Grupo de pessoas / sociedade
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  }
+  if (c.includes('historia') || c.includes('direito') || c.includes('legislacao') || c.includes('politica')) {
+    // Templo clássico / colunas
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`;
+  }
+  if (c.includes('literatura') || c.includes('livro') || c.includes('educacao') || c.includes('linguistica')) {
+    // Livro aberto
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
+  }
+  if (c.includes('geografia') || c.includes('ecologia') || c.includes('urbanismo') || c.includes('economia')) {
+    // Globo terrestre
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+  }
+  // Lâmpada / Ideias / Comunicação / Tecnologia / Outros
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`;
+}
+
+// Ícone destacado para os cards de Temas ("Em alta")
+function obterIconeCardTema(index = 0) {
+  if (index % 2 === 0) {
+    // Chama ("Em alta" como na imagem de referência)
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
+  }
+  // Documento pautado (segundo card na imagem de referência)
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>`;
+}
 
 function normalizarTipo(categoria) {
   if (!categoria) return 'geral';
@@ -77,13 +146,13 @@ async function inicializarLandingPage() {
     console.error('Erro ao inicializar a página:', error);
     resultsContainer.innerHTML = `
       <div class="empty-state">
-        Não foi possível sincronizar o caderno de referências. Verifique se o servidor backend está ativo na porta 3000.
+        Não foi possível carregar os repertórios. Verifique se o servidor backend está ativo na porta 3000.
       </div>
     `;
   }
 }
 
-// 2. Renderiza o Aparato Marginal exibindo apenas os Eixos com detents quadrados
+// 2. Renderiza o Menu Lateral de Eixos com ícones e pílula ativa azul-marinho
 function renderizarMenuEixos() {
   if (!eixosNavList) return;
   eixosNavList.innerHTML = '';
@@ -91,7 +160,11 @@ function renderizarMenuEixos() {
   const liTodos = document.createElement('li');
   liTodos.innerHTML = `
     <a href="#" data-eixo-id="todos" class="${eixoSelecionadoId === null ? 'active' : ''}">
-      <span class="nome">Todos os eixos</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span class="nome">Início (Todos)</span>
     </a>
   `;
   eixosNavList.appendChild(liTodos);
@@ -101,6 +174,7 @@ function renderizarMenuEixos() {
     const isAtivo = eixoSelecionadoId === eixo.id ? 'active' : '';
     li.innerHTML = `
       <a href="#eixo-${eixo.id}" data-eixo-id="${eixo.id}" class="${isAtivo}">
+        ${obterIconeEixo(eixo.nome)}
         <span class="nome">${eixo.nome}</span>
       </a>
     `;
@@ -108,29 +182,40 @@ function renderizarMenuEixos() {
   });
 }
 
-// 3. Renderiza os filtros de categorias reais vindos da tabela repertorios
+// 3. Renderiza os Cards Ilustrados de Categorias vindos da API
 function renderizarChipsCategorias(categorias) {
   if (!categoriasChips) return;
   categoriasChips.innerHTML = '';
 
   const btnTodas = document.createElement('button');
   btnTodas.type = 'button';
-  btnTodas.className = `chip ${categoriaSelecionada === 'todas' ? 'active' : ''}`;
+  btnTodas.className = `cat-card ${categoriaSelecionada === 'todas' ? 'active' : ''}`;
   btnTodas.dataset.categoria = 'todas';
-  btnTodas.textContent = 'Todas';
+  btnTodas.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+    </svg>
+    <span>Todas</span>
+  `;
   categoriasChips.appendChild(btnTodas);
 
   categorias.forEach(cat => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `chip ${categoriaSelecionada === cat ? 'active' : ''}`;
+    btn.className = `cat-card ${categoriaSelecionada === cat ? 'active' : ''}`;
     btn.dataset.categoria = cat;
-    btn.textContent = cat;
+    btn.innerHTML = `
+      ${obterIconeCategoria(cat)}
+      <span>${cat}</span>
+    `;
     categoriasChips.appendChild(btn);
   });
 }
 
-// 4. Renderiza a Edição de Referência com os Temas, Argumentos e Repertórios do banco
+// 4. Renderiza os Cards de Temas, Teses e Repertórios no formato do Dashboard
 function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = '') {
   temasExibidosAtualmente = temas || [];
 
@@ -145,13 +230,12 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
   if (temasParaRenderizar.length === 0) {
     resultsContainer.innerHTML = `
       <div class="empty-state">
-        Nenhum registro localizado para os critérios selecionados. Ajuste o filtro lateral ou digite seu próprio tema na consulta acima.
+        Nenhum tema encontrado para este filtro. Selecione outra categoria acima ou pesquise seu próprio tema na barra de busca.
       </div>
     `;
     return;
   }
 
-  const eixosUnicos = new Set(temasParaRenderizar.map(t => t.eixo_id).filter(Boolean)).size;
   let totalArgs = 0;
   let totalReps = 0;
 
@@ -163,30 +247,31 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
     totalReps += repsDoTema.length;
   });
 
-  const tituloPrincipal = temasParaRenderizar.length === 1
-    ? destacarTermo(temasParaRenderizar[0].titulo, destaqueBusca)
-    : 'Catálogo de Temas, Teses e Repertórios';
+  const tituloSecao = temasParaRenderizar.length === 1
+    ? 'Tema selecionado'
+    : eixoSelecionadoId
+      ? `Temas do eixo selecionado`
+      : 'Temas e repertórios em destaque';
 
-  const descricaoContexto = contextoCustom
+  const subtituloSecao = contextoCustom
     ? contextoCustom
-    : temasParaRenderizar.length === 1
-      ? `Eixo temático classificado: ${temasParaRenderizar[0].eixo || 'Geral'}.`
-      : 'Índice integral de temas de redação sincronizados com o banco de dados. Selecione um eixo à esquerda ou consulte qualquer tema próprio na barra superior.';
+    : 'Selecione um tema ou copie diretamente as teses e repertórios legitimados para sua redação.';
 
   let html = `
-    <header class="tema">
-      <h1>${tituloPrincipal}</h1>
-      <p class="contexto">${descricaoContexto}</p>
+    <div class="feed-header">
+      <div class="feed-header-left">
+        <h2>${tituloSecao}</h2>
+        <p>${subtituloSecao}</p>
+      </div>
       <ul class="counts">
-        <li><strong>${temasParaRenderizar.length}</strong> ${temasParaRenderizar.length === 1 ? 'pauta catalogada' : 'pautas catalogadas'}</li>
-        <li><strong>${eixosUnicos}</strong> ${eixosUnicos === 1 ? 'eixo temático' : 'eixos temáticos'}</li>
-        <li><strong>${totalArgs}</strong> ${totalArgs === 1 ? 'tese argumentativa' : 'teses argumentativas'}</li>
-        <li><strong>${totalReps}</strong> ${totalReps === 1 ? 'repertório legitimado' : 'repertórios legitimados'}</li>
+        <li><strong>${temasParaRenderizar.length}</strong> ${temasParaRenderizar.length === 1 ? 'tema' : 'temas'}</li>
+        <li><strong>${totalArgs}</strong> ${totalArgs === 1 ? 'tese' : 'teses'}</li>
+        <li><strong>${totalReps}</strong> ${totalReps === 1 ? 'repertório' : 'repertórios'}</li>
       </ul>
-    </header>
+    </div>
   `;
 
-  temasParaRenderizar.forEach(tema => {
+  temasParaRenderizar.forEach((tema, idx) => {
     const args = tema.argumentos || [];
     const repsFiltrados = (tema.repertorios || []).filter(r =>
       categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
@@ -214,26 +299,35 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
             <p class="rep-desc" data-part>${destacarTermo(rep.conteudo, destaqueBusca)}</p>
           </article>
         `).join('')
-      : `<p class="qtd">Nenhum repertório registrado nesta área.</p>`;
+      : `<p class="qtd">Nenhum repertório registrado nesta categoria.</p>`;
 
     html += `
-      <section class="eixo" id="tema-${tema.id}" data-tema-id="${tema.id}">
-        <div class="eixo-header">
-          <h2>
-            <a href="#tema-${tema.id}" class="tema-link" data-tema-id="${tema.id}">
-              ${destacarTermo(tema.titulo, destaqueBusca)}
-            </a>
-          </h2>
-          <span class="eixo-tag">${tema.eixo || 'Eixo Geral'}</span>
+      <section class="tema-card" id="tema-${tema.id}" data-tema-id="${tema.id}">
+        <div class="tema-card-top">
+          <div class="tema-icon-box" aria-hidden="true">
+            ${obterIconeCardTema(idx)}
+          </div>
+          <div class="tema-head-info">
+            <h3>
+              <a href="#tema-${tema.id}" class="tema-link" data-tema-id="${tema.id}">
+                ${destacarTermo(tema.titulo, destaqueBusca)}
+              </a>
+            </h3>
+            <span class="badge-pill">${tema.eixo || 'Eixo Geral'}</span>
+          </div>
         </div>
         <div class="cols">
           <div class="col-pane-left">
-            <h3 class="col-title">Teses e Argumentos (${args.length})</h3>
-            ${argsHtml}
+            <h4 class="col-title">Teses e Argumentos (${args.length})</h4>
+            <div class="entry-list">
+              ${argsHtml}
+            </div>
           </div>
           <div class="col-pane-right">
-            <h3 class="col-title">Repertórios Socioculturais (${repsFiltrados.length})</h3>
-            ${repsHtml}
+            <h4 class="col-title">Repertórios Socioculturais (${repsFiltrados.length})</h4>
+            <div class="entry-list">
+              ${repsHtml}
+            </div>
           </div>
         </div>
       </section>
@@ -284,16 +378,16 @@ function renderizarRecomendacaoTemaLivre(rec) {
 
   const correlatosHtml = correlatos.length > 0
     ? `
-      <section class="eixo">
-        <div class="eixo-header">
-          <h2>Pautas correlatas no catálogo</h2>
+      <section class="tema-card">
+        <div class="section-head">
+          <h2>Temas correlatos no catálogo</h2>
         </div>
         <ul class="correlatos-list">
           ${correlatos.map(t => `
             <li>
               <a href="#tema-${t.id}" class="tema-link" data-tema-id="${t.id}">
                 <span>${t.titulo}</span>
-                <span class="eixo-tag">${t.eixo}</span>
+                <span class="badge-pill">${t.eixo}</span>
               </a>
             </li>
           `).join('')}
@@ -303,32 +397,39 @@ function renderizarRecomendacaoTemaLivre(rec) {
     : '';
 
   resultsContainer.innerHTML = `
-    <header class="tema">
-      <h1>“${rec.tema_pesquisado}”</h1>
-      <p class="contexto">
-        Proposta analisada por afinidade vocabular e classificada no eixo <strong>${rec.eixo_sugerido}</strong>.
-        Abaixo estão as teses e os repertórios socioculturais da nossa base mais pertinentes para fundamentar sua redação:
-      </p>
+    <div class="feed-header">
+      <div class="feed-header-left">
+        <h2>Recomendação para “${rec.tema_pesquisado}”</h2>
+        <p>Proposta classificada no eixo <strong>${rec.eixo_sugerido}</strong> com base no repertório da plataforma.</p>
+      </div>
       <ul class="counts">
-        <li>Eixo identificado: <strong>${rec.eixo_sugerido}</strong></li>
         <li><strong>${args.length}</strong> teses recomendadas</li>
         <li><strong>${reps.length}</strong> repertórios recomendados</li>
       </ul>
-    </header>
+    </div>
 
-    <section class="eixo">
-      <div class="eixo-header">
-        <h2>Estrutura recomendada para o tema proposto</h2>
-        <span class="eixo-tag">${rec.eixo_sugerido}</span>
+    <section class="tema-card">
+      <div class="tema-card-top">
+        <div class="tema-icon-box" aria-hidden="true">
+          ${obterIconeCardTema(0)}
+        </div>
+        <div class="tema-head-info">
+          <h3>${rec.tema_pesquisado}</h3>
+          <span class="badge-pill">${rec.eixo_sugerido}</span>
+        </div>
       </div>
       <div class="cols">
         <div class="col-pane-left">
-          <h3 class="col-title">Teses Recomendadas (${args.length})</h3>
-          ${argsHtml}
+          <h4 class="col-title">Teses Recomendadas (${args.length})</h4>
+          <div class="entry-list">
+            ${argsHtml}
+          </div>
         </div>
         <div class="col-pane-right">
-          <h3 class="col-title">Repertórios Recomendados (${reps.length})</h3>
-          ${repsHtml}
+          <h4 class="col-title">Repertórios Recomendados (${reps.length})</h4>
+          <div class="entry-list">
+            ${repsHtml}
+          </div>
         </div>
       </div>
     </section>
@@ -365,10 +466,10 @@ async function carregarTemaPorId(id, termoDestaque = '') {
 // 7. Busca na API (/api/temas/busca + /api/temas/recomendar) para o Autocomplete e filtragem
 async function buscarTemas(termo, atualizarPagina = false) {
   searchBtn.disabled = true;
-  searchBtn.textContent = 'Consultando...';
+  searchBtn.textContent = 'Buscando...';
 
   suggestList.style.display = 'block';
-  suggestList.innerHTML = '<li><a href="#"><span>Consultando base de referências e analisando eixo...</span></a></li>';
+  suggestList.innerHTML = '<li><a href="#"><span>Consultando repertórios e analisando eixo...</span></a></li>';
 
   try {
     const [buscaRes, recRes] = await Promise.all([
@@ -389,7 +490,7 @@ async function buscarTemas(termo, atualizarPagina = false) {
         btnVerTodos.style.display = 'inline-block';
         renderizarLandingTemas(
           temasFiltrados,
-          `Resultados localizados no catálogo para a consulta “${termo}”.`,
+          `Resultados encontrados para “${termo}”.`,
           termo
         );
       } else if (rec) {
@@ -401,7 +502,7 @@ async function buscarTemas(termo, atualizarPagina = false) {
     suggestList.innerHTML = '<li><a href="#"><span>Erro ao consultar a base de dados.</span></a></li>';
   } finally {
     searchBtn.disabled = false;
-    searchBtn.textContent = 'Consultar';
+    searchBtn.textContent = 'Buscar';
   }
 }
 
@@ -429,8 +530,8 @@ function renderizarSugestoes(temas, termo, rec) {
     const liCustom = document.createElement('li');
     liCustom.innerHTML = `
       <a href="#recomendar" class="suggest-custom">
-        <span>Gerar concordância de teses e repertórios para: <strong>“${termo}”</strong></span>
-        <span class="meta">[EIXO: ${rec.eixo_sugerido}]</span>
+        <span>Gerar teses e repertórios para: <strong>“${termo}”</strong></span>
+        <span class="meta">${rec.eixo_sugerido}</span>
       </a>
     `;
     liCustom.querySelector('a').addEventListener('click', (e) => {
@@ -448,7 +549,7 @@ function voltarParaTodosTemas() {
   searchInput.value = '';
   suggestList.style.display = 'none';
   btnVerTodos.style.display = 'none';
-  document.querySelectorAll('#categoriasChips .chip').forEach(c => {
+  document.querySelectorAll('#categoriasChips .cat-card').forEach(c => {
     c.classList.toggle('active', c.dataset.categoria === 'todas');
   });
   renderizarLandingTemas(todosTemas);
@@ -521,19 +622,19 @@ if (eixosNavList) {
     const filtrados = todosTemas.filter(t => t.eixo_id === eixoSelecionadoId);
     renderizarLandingTemas(
       filtrados,
-      `Recorte temático do eixo ${eixoObj ? eixoObj.nome : ''}.`
+      `Exibindo os temas e repertórios do eixo ${eixoObj ? eixoObj.nome : ''}.`
     );
   });
 }
 
-// Filtro por Categoria de Repertório do banco
+// Filtro por Card de Categoria de Repertório do banco
 if (categoriasChips) {
   categoriasChips.addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip[data-categoria]');
-    if (!chip) return;
+    const card = e.target.closest('.cat-card[data-categoria]');
+    if (!card) return;
 
-    categoriaSelecionada = chip.dataset.categoria;
-    document.querySelectorAll('#categoriasChips .chip').forEach(c => {
+    categoriaSelecionada = card.dataset.categoria;
+    document.querySelectorAll('#categoriasChips .cat-card').forEach(c => {
       c.classList.toggle('active', c.dataset.categoria === categoriaSelecionada);
     });
 
@@ -543,12 +644,25 @@ if (categoriasChips) {
 
     const contexto = categoriaSelecionada === 'todas'
       ? null
-      : `Exibindo apenas pautas com repertórios na área de ${categoriaSelecionada}.`;
+      : `Filtrando temas com repertórios na categoria ${categoriaSelecionada}.`;
 
     if (categoriaSelecionada !== 'todas') {
       btnVerTodos.style.display = 'inline-block';
     }
     renderizarLandingTemas(filtrados, contexto, searchInput.value.trim());
+  });
+}
+
+if (btnLimparCategoria) {
+  btnLimparCategoria.addEventListener('click', () => {
+    categoriaSelecionada = 'todas';
+    document.querySelectorAll('#categoriasChips .cat-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.categoria === 'todas');
+    });
+    const filtrados = eixoSelecionadoId
+      ? todosTemas.filter(t => t.eixo_id === eixoSelecionadoId)
+      : todosTemas;
+    renderizarLandingTemas(filtrados, null, searchInput.value.trim());
   });
 }
 

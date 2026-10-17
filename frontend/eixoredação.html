@@ -6,84 +6,129 @@
   <title>Redacta — Repertórios e Argumentos por Eixo Temático</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="masthead">
-  <div class="masthead-bar">
-    <div class="masthead-left">
-      <a class="brand" id="brandHome" href="#">REDACTA</a>
-      <span class="masthead-sep" aria-hidden="true">/</span>
-      <p class="tagline">Concordância de Teses e Repertórios Socioculturais para Redação</p>
+<div class="app-shell">
+  <!-- BARRA LATERAL ESQUERDA COM ROLAGEM INDEPENDENTE -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <a class="brand" id="brandHome" href="#">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <path d="M7 4C5.34315 4 4 5.34315 4 7V31.5C4 32.3284 4.89543 32.8429 5.59619 32.4049L18 24.6525L30.4038 32.4049C31.1046 32.8429 32 32.3284 32 31.5V7C32 5.34315 30.6569 4 29 4H7Z" fill="currentColor"/>
+            <path d="M11 11H25M11 16H25M11 21H19" stroke="var(--brand-mark-lines)" stroke-width="2.4" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">Redacta</span>
+      </a>
     </div>
-    <div class="masthead-right">
-      <button type="button" class="btn-bracket" id="btnVerTodos" style="display: none;">Restaurar Catálogo Completo</button>
-      <button type="button" class="theme-toggle" id="themeToggle" title="Alternar entre modo claro e escuro" aria-label="Alternar tema">
-        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-        </svg>
-        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-      </button>
+
+    <div class="sidebar-scroll">
+      <nav class="sidebar-nav" aria-label="Navegação por Eixos Temáticos">
+        <p class="sidebar-label">Eixos Temáticos</p>
+        <ul class="nav-list" id="eixosNavList">
+          <li><span class="qtd">Carregando eixos...</span></li>
+        </ul>
+      </nav>
     </div>
-  </div>
 
-  <div class="search-ledger">
-    <form class="search" role="search" onsubmit="return false">
-      <div class="field">
-        <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"/>
-          <path d="m20 20-3.5-3.5"/>
+    <div class="sidebar-footer">
+      <div class="promo-card">
+        <svg class="promo-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+          <path d="M6 12.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/>
+          <path d="M22 10v6"/>
         </svg>
-        <input
-          type="search"
-          id="searchInput"
-          name="q"
-          placeholder="Digite um tema de redação próprio, eixo, autor ou conceito..."
-          autocomplete="off"
-          aria-label="Pesquisar tema de redação"
-        >
-        <button type="submit" id="searchBtn">Consultar</button>
+        <p>Domine seu repertório. Transforme ideias em <strong>argumentos.</strong></p>
       </div>
-      <ul class="suggest" id="suggestList" aria-label="Temas e recomendações"></ul>
-    </form>
-  </div>
-</header>
-
-<main class="layout page">
-  <!-- APARATO MARGINAL ESQUERDO: Índice de Eixos e Filtro de Áreas -->
-  <aside class="side">
-    <nav class="apparatus-block" aria-label="Eixos temáticos">
-      <h2 class="side-title">Índice de Eixos</h2>
-      <ul class="index" id="eixosNavList">
-        <li><span class="qtd">Carregando índice...</span></li>
-      </ul>
-    </nav>
-
-    <fieldset class="filtro apparatus-block">
-      <legend class="side-title">Área do Repertório</legend>
-      <div class="chips" id="categoriasChips">
-        <button type="button" class="chip active" data-categoria="todas">Todas</button>
-      </div>
-    </fieldset>
+    </div>
   </aside>
 
-  <!-- BLOCO DE REFERÊNCIA COM TRILHO CENTRAL -->
-  <div class="resultado" id="resultsContainer">
-    <div class="empty-state">Sincronizando caderno de referências com o banco de dados...</div>
-  </div>
-</main>
+  <!-- ÁREA PRINCIPAL DIREITA -->
+  <div class="main-area">
+    <!-- BARRA DE TOPO COM BUSCA E ALTERNADOR DE TEMA -->
+    <header class="topbar">
+      <form class="search" role="search" onsubmit="return false">
+        <div class="field">
+          <svg class="field-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-3.5-3.5"/>
+          </svg>
+          <input
+            type="search"
+            id="searchInput"
+            name="q"
+            placeholder="Buscar repertórios, temas, autores..."
+            autocomplete="off"
+            aria-label="Buscar repertórios, temas ou autores"
+          >
+          <button type="submit" id="searchBtn">Buscar</button>
+        </div>
+        <ul class="suggest" id="suggestList" aria-label="Temas e recomendações"></ul>
+      </form>
 
-<footer class="foot">
-  <div class="foot-inner">
-    <span>REDACTA — Caderno de Referência e Concordância Argumentativa</span>
-    <span>Base de dados sincronizada via Supabase</span>
+      <div class="topbar-actions">
+        <button type="button" class="btn-outline" id="btnVerTodos" style="display: none;">Ver todos os temas</button>
+        <button type="button" class="theme-toggle" id="themeToggle" title="Alternar entre modo claro e escuro" aria-label="Alternar tema">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTEÚDO CENTRAL DO DASHBOARD -->
+    <main class="dashboard-content">
+      <!-- Banner Hero estilo referência -->
+      <section class="hero-banner" id="heroBanner">
+        <div class="hero-left">
+          <div class="hero-circle-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="13" y2="17"/>
+            </svg>
+          </div>
+          <div class="hero-copy">
+            <h1>Explore repertórios por temas</h1>
+            <p>História, Filosofia, Sociologia, Literatura, Atualidades e mais — ou pesquise seu próprio tema acima.</p>
+          </div>
+        </div>
+        <a href="#resultsContainer" class="hero-btn" id="heroExploreBtn">
+          <span>Explorar agora</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+      </section>
+
+      <!-- Seção de Categorias Ilustradas (vindas da API) -->
+      <section class="categories-section" aria-label="Categorias de repertório">
+        <div class="section-head">
+          <h2>Categorias</h2>
+          <button type="button" class="link-action" id="btnLimparCategoria">Ver todas</button>
+        </div>
+        <div class="category-cards" id="categoriasChips">
+          <span class="qtd">Carregando categorias...</span>
+        </div>
+      </section>
+
+      <!-- Seção de Temas, Teses e Repertórios (vindos da API) -->
+      <section class="results-section" id="resultsContainer" aria-live="polite">
+        <div class="empty-state">Carregando repertórios e teses do banco de dados...</div>
+      </section>
+    </main>
   </div>
-</footer>
+</div>
 
 <script src="app.js"></script>
 </body>
