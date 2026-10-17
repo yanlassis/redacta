@@ -491,7 +491,11 @@ app.get('/api/categorias', async (req, res) => {
   }
 });
 
-// Inicialização do servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
-});
+// Inicialização do servidor (apenas se executado diretamente, permitindo uso como Serverless na Vercel)
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
+  });
+}
+
+module.exports = app;

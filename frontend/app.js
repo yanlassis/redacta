@@ -8,7 +8,10 @@ const categoriasChips = document.getElementById('categoriasChips');
 const brandHome = document.getElementById('brandHome');
 const btnVerTodos = document.getElementById('btnVerTodos');
 
-const API_BASE = 'http://localhost:3000/api';
+// Base da API: usa o mesmo domínio na Vercel (/api) ou localhost:3000 em ambiente local
+const API_BASE = window.location.hostname === 'localhost' && window.location.port !== '3000' && window.location.port !== ''
+  ? 'http://localhost:3000/api'
+  : '/api';
 
 // Estado da aplicação carregado do banco
 let todosTemas = [];
