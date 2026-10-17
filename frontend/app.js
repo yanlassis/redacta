@@ -62,7 +62,6 @@ function renderizarMenuEixos() {
   if (!eixosNavList) return;
   eixosNavList.innerHTML = '';
 
-  // Item "Todos os eixos"
   const liTodos = document.createElement('li');
   liTodos.innerHTML = `
     <a href="#" data-eixo-id="todos" class="${eixoSelecionadoId === null ? 'active' : ''}">
@@ -109,15 +108,13 @@ function renderizarChipsCategorias(categorias) {
 function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados', destaqueBusca = '') {
   temasExibidosAtualmente = temas || [];
 
-  // Filtra os temas que efetivamente serão renderizados (caso haja filtro de categoria ativo)
   const temasParaRenderizar = temasExibidosAtualmente.filter(tema => {
     if (categoriaSelecionada === 'todas' || temasExibidosAtualmente.length === 1) return true;
     const repsFiltrados = (tema.repertorios || []).filter(r => r.categoria === categoriaSelecionada);
     return repsFiltrados.length > 0;
   });
 
-  // Atualiza a barra lateral para refletir exatamente os dados exibidos
-  renderizarMenuEixos(temasParaRenderizar);
+  renderizarMenuEixos();
 
   if (temasParaRenderizar.length === 0) {
     resultsContainer.innerHTML = `
@@ -128,7 +125,6 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
     return;
   }
 
-  // Contagens reais exatas dos cards renderizados na tela
   const eixosUnicos = new Set(temasParaRenderizar.map(t => t.eixo_id).filter(Boolean)).size;
   let totalArgs = 0;
   let totalReps = 0;
@@ -147,7 +143,7 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
 
   const descricaoContexto = temasParaRenderizar.length === 1
     ? `Eixo temático: ${temasParaRenderizar[0].eixo || 'Geral'}`
-    : 'Consulte abaixo os temas, argumentos e repertórios socioculturais cadastrados no banco de dados.';
+    : 'Consulte abaixo os temas, argumentos e repertórios socioculturais cadastrados no banco de dados ou digite qualquer tema de redação na barra acima.';
 
   let html = `
     <header class="tema">
@@ -215,6 +211,96 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
   resultsContainer.innerHTML = html;
 }
 
+// 5. Renderiza a página de Recomendação Inteligente para um Tema Livre do Usuário
+function renderizarRecomendacaoTemaLivre(rec) {
+  suggestList.style.display = 'none';
+  btnVerTodos.style.display = 'inline-block';
+  eixoSelecionadoId = rec.eixo_id;
+  renderizarMenuEixos();
+
+  const args = rec.argumentos || [];
+  const reps = (rec.repertorios || []).filter(r =>
+    categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
+  );
+  const correlatos = rec.temas_correlatos || [];
+
+  const argsHtml = args.map(arg => `
+    <article class="arg" data-copyable>
+      <h4 class="tese" data-part>${arg.descricao}</h4>
+      <p class="rep-uso" style="margin: 0 0 .6rem; font-size: .85rem; color: var(--soft);">
+        <strong>Tema de referência no banco:</strong> ${arg.tema_origem}
+      </p>
+      <button class="copy" type="button">Copiar argumento</button>
+    </article>
+  `).join('');
+
+  const repsHtml = reps.map(rep => `
+    <article class="rep" data-tipo="${normalizarTipo(rep.categoria)}" data-copyable>
+      <p class="rep-tipo" data-part>${rep.categoria}</p>
+      <p class="rep-desc" data-part>${rep.conteudo}</p>
+      <p class="rep-uso" style="margin: 0 0 .6rem; font-size: .85rem; color: var(--soft);">
+        <strong>Pertinência:</strong> aplicável ao eixo <em>${rep.eixo}</em>
+      </p>
+      <button class="copy" type="button">Copiar repertório</button>
+    </article>
+  `).join('');
+
+  const correlatosHtml = correlatos.length > 0
+    ? `
+      <section class="eixo" style="margin-top: 2rem;">
+        <div class="eixo-header">
+          <h2>Temas correlatos na nossa base de dados</h2>
+        </div>
+        <ul class="index" style="display: grid; gap: .6rem;">
+          ${correlatos.map(t => `
+            <li>
+              <a href="#tema-${t.id}" class="tema-link" data-tema-id="${t.id}" style="background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px;">
+                <span class="nome">${t.titulo}</span>
+                <span class="qtd">Eixo: ${t.eixo}</span>
+              </a>
+            </li>
+          `).join('')}
+        </ul>
+      </section>
+    `
+    : '';
+
+  resultsContainer.innerHTML = `
+    <header class="tema">
+      <span class="tema-badge">Análise de Tema Personalizado • Eixo Identificado: ${rec.eixo_sugerido}</span>
+      <h1>“${rec.tema_pesquisado}”</h1>
+      <p class="contexto">
+        Este tema específico foi analisado por afinidade temática e associado ao eixo <strong>${rec.eixo_sugerido}</strong>.
+        Abaixo estão os argumentos e repertórios socioculturais da nossa base de dados mais adequados para fundamentar a sua redação:
+      </p>
+      <ul class="counts">
+        <li><strong>${rec.eixo_sugerido}</strong> (eixo principal)</li>
+        <li><strong>${args.length}</strong> argumentos recomendados</li>
+        <li><strong>${reps.length}</strong> repertórios recomendados</li>
+      </ul>
+    </header>
+
+    <section class="eixo">
+      <div class="eixo-header">
+        <h2>Estrutura recomendada para a sua redação</h2>
+        <span class="eixo-tag">${rec.eixo_sugerido}</span>
+      </div>
+      <div class="cols">
+        <div>
+          <h3 class="col-title">Argumentos Adequados (${args.length})</h3>
+          ${argsHtml}
+        </div>
+        <div>
+          <h3 class="col-title">Repertórios Adequados (${reps.length})</h3>
+          ${repsHtml}
+        </div>
+      </div>
+    </section>
+
+    ${correlatosHtml}
+  `;
+}
+
 // Utilitário para grifar (<mark>) o termo pesquisado
 function destacarTermo(texto, termo) {
   if (!termo || !texto) return texto;
@@ -223,7 +309,7 @@ function destacarTermo(texto, termo) {
   return texto.replace(regex, '<mark>$1</mark>');
 }
 
-// 5. Carrega um tema específico via GET /api/temas/:id
+// 6. Carrega um tema específico via GET /api/temas/:id
 async function carregarTemaPorId(id, termoDestaque = '') {
   try {
     suggestList.style.display = 'none';
@@ -240,40 +326,54 @@ async function carregarTemaPorId(id, termoDestaque = '') {
   }
 }
 
-// 6. Busca na API (/api/temas/busca) para o Autocomplete e filtragem
+// 7. Consulta a rota de recomendação para um tema inédito/livre digitado pelo aluno
+async function analisarTemaLivre(termo) {
+  try {
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Analisando...';
+    suggestList.style.display = 'none';
+
+    const response = await fetch(`${API_BASE}/temas/recomendar?q=${encodeURIComponent(termo)}`);
+    if (!response.ok) throw new Error('Falha ao recomendar repertórios');
+
+    const rec = await response.json();
+    renderizarRecomendacaoTemaLivre(rec);
+  } catch (error) {
+    console.error('Erro ao analisar tema livre:', error);
+  } finally {
+    searchBtn.disabled = false;
+    searchBtn.textContent = 'Buscar';
+  }
+}
+
+// 8. Busca na API (/api/temas/busca + /api/temas/recomendar) para o Autocomplete e filtragem
 async function buscarTemas(termo, atualizarPagina = false) {
   searchBtn.disabled = true;
   searchBtn.textContent = 'Buscando...';
 
   suggestList.style.display = 'block';
-  suggestList.innerHTML = '<li><a href="#"><span>Carregando temas...</span></a></li>';
+  suggestList.innerHTML = '<li><a href="#"><span>Buscando temas e analisando eixo...</span></a></li>';
 
   try {
-    const url = termo
-      ? `${API_BASE}/temas/busca?q=${encodeURIComponent(termo)}`
-      : `${API_BASE}/temas/busca`;
-    const response = await fetch(url);
+    const [buscaRes, recRes] = await Promise.all([
+      fetch(`${API_BASE}/temas/busca?q=${encodeURIComponent(termo)}`),
+      fetch(`${API_BASE}/temas/recomendar?q=${encodeURIComponent(termo)}`)
+    ]);
 
-    if (!response.ok) {
-      throw new Error(`Erro na API: ${response.status}`);
-    }
+    const data = buscaRes.ok ? await buscaRes.json() : [];
+    const rec = recRes.ok ? await recRes.json() : null;
 
-    const data = await response.json();
+    renderizarSugestoes(data, termo, rec);
 
-    if (data.length === 0) {
-      suggestList.innerHTML = '<li><a href="#"><span>Nenhum tema encontrado no banco.</span></a></li>';
-      if (atualizarPagina) {
-        renderizarLandingTemas([], `Resultados para "${termo}"`);
-        btnVerTodos.style.display = 'inline-block';
-      }
-    } else {
-      renderizarSugestoes(data, termo);
-      if (atualizarPagina) {
-        suggestList.style.display = 'none';
+    if (atualizarPagina) {
+      suggestList.style.display = 'none';
+      if (data.length > 0) {
         const idsEncontrados = new Set(data.map(d => d.id));
         const temasFiltrados = todosTemas.filter(t => idsEncontrados.has(t.id));
         btnVerTodos.style.display = 'inline-block';
         renderizarLandingTemas(temasFiltrados, `Resultados para "${termo}"`, termo);
+      } else if (rec) {
+        renderizarRecomendacaoTemaLivre(rec);
       }
     }
   } catch (error) {
@@ -285,10 +385,11 @@ async function buscarTemas(termo, atualizarPagina = false) {
   }
 }
 
-// Renderiza o dropdown de autocomplete com o nome real do eixo vindo do banco
-function renderizarSugestoes(temas, termo) {
+// Renderiza o dropdown de autocomplete com temas do banco + opção de gerar recomendação para o tema próprio do aluno
+function renderizarSugestoes(temas, termo, rec) {
   suggestList.innerHTML = '';
 
+  // Se houver temas exatos/parciais no banco, lista primeiro
   temas.forEach(tema => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -304,6 +405,22 @@ function renderizarSugestoes(temas, termo) {
     });
     suggestList.appendChild(li);
   });
+
+  // Sempre oferece a opção inteligente de analisar o tema exato que o aluno digitou
+  if (rec && !rec.existe_exato) {
+    const liCustom = document.createElement('li');
+    liCustom.innerHTML = `
+      <a href="#recomendar" class="suggest-custom">
+        <span>✨ Ver argumentos e repertórios para: <strong>“${termo}”</strong></span>
+        <span class="meta">Eixo: ${rec.eixo_sugerido}</span>
+      </a>
+    `;
+    liCustom.querySelector('a').addEventListener('click', (e) => {
+      e.preventDefault();
+      renderizarRecomendacaoTemaLivre(rec);
+    });
+    suggestList.appendChild(liCustom);
+  }
 }
 
 // Resetar para visão completa da Landing Page
