@@ -13,6 +13,7 @@ const API_BASE = 'http://localhost:3000/api';
 // Estado da aplicação carregado do banco
 let todosTemas = [];
 let todosEixos = [];
+let temasExibidosAtualmente = [];
 let eixoSelecionadoId = null;
 let categoriaSelecionada = 'todas';
 let timeoutId = null;
@@ -44,7 +45,6 @@ async function inicializarLandingPage() {
     const categorias = categoriasRes.ok ? await categoriasRes.json() : [];
     todosTemas = await temasRes.json();
 
-    renderizarMenuEixos(todosEixos);
     renderizarChipsCategorias(categorias);
     renderizarLandingTemas(todosTemas, 'Catálogo do Banco de Dados');
   } catch (error) {
@@ -57,30 +57,56 @@ async function inicializarLandingPage() {
   }
 }
 
-// 2. Renderiza a barra lateral com os Eixos reais do banco
-function renderizarMenuEixos(eixos) {
+// 2. Calcula contagens reais com base exatamente nos temas visíveis/filtrados e renderiza a barra lateral
+function renderizarMenuEixos(temasBase = todosTemas) {
   if (!eixosNavList) return;
   eixosNavList.innerHTML = '';
 
+  // Filtra repertórios conforme a categoria ativa para que a barra lateral bata 100% com a tela
+  const calcularTotaisDeTemas = (listaTemas) => {
+    let argsCount = 0;
+    let repsCount = 0;
+    listaTemas.forEach(t => {
+      const repsDoTema = (t.repertorios || []).filter(r =>
+        categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
+      );
+      if (categoriaSelecionada !== 'todas' && repsDoTema.length === 0 && listaTemas.length > 1) {
+        return;
+      }
+      argsCount += (t.argumentos || []).length;
+      repsCount += repsDoTema.length;
+    });
+    return { argsCount, repsCount, temasCount: listaTemas.length };
+  };
+
+  // Totais gerais de todos os temas do catálogo (respeitando filtro de categoria)
+  const totaisCatalogo = calcularTotaisDeTemas(todosTemas);
+
   // Item "Todos os eixos"
   const liTodos = document.createElement('li');
-  const totalArgs = eixos.reduce((acc, e) => acc + (e.total_argumentos || 0), 0);
-  const totalReps = eixos.reduce((acc, e) => acc + (e.total_repertorios || 0), 0);
   liTodos.innerHTML = `
     <a href="#" data-eixo-id="todos" class="${eixoSelecionadoId === null ? 'active' : ''}">
-      <span class="nome">Todos os eixos (${todosTemas.length})</span>
-      <span class="qtd">${totalArgs} argumento(s), ${totalReps} repertório(s)</span>
+      <span class="nome">Todos os eixos (${totaisCatalogo.temasCount} temas)</span>
+      <span class="qtd">${totaisCatalogo.argsCount} argumento(s), ${totaisCatalogo.repsCount} repertório(s)</span>
     </a>
   `;
   eixosNavList.appendChild(liTodos);
 
-  eixos.forEach(eixo => {
+  todosEixos.forEach(eixo => {
+    // Se estamos vendo apenas 1 tema específico daquele eixo, mostra a contagem daquele tema;
+    // caso contrário, mostra a contagem real somada dos temas daquele eixo na tela
+    const temasDoEixoVisiveis = temasBase.filter(t => t.eixo_id === eixo.id);
+    const temasDoEixoCatalogo = todosTemas.filter(t => t.eixo_id === eixo.id);
+    const baseParaCalculo = temasDoEixoVisiveis.length > 0 ? temasDoEixoVisiveis : temasDoEixoCatalogo;
+
+    const { argsCount, repsCount, temasCount } = calcularTotaisDeTemas(baseParaCalculo);
+
     const li = document.createElement('li');
     const isAtivo = eixoSelecionadoId === eixo.id ? 'active' : '';
     li.innerHTML = `
       <a href="#eixo-${eixo.id}" data-eixo-id="${eixo.id}" class="${isAtivo}">
-        <span class="nome">${eixo.nome}</span>
-        <span class="qtd">${eixo.total_argumentos} argumento(s), ${eixo.total_repertorios} repertório(s)</span>
+        <span class="nome">${eixo.nome} (${temasCount} ${temasCount === 1 ? 'tema' : 'temas'})</span>
+        <span class="qtd">${argsCount} argumento(s), ${repsCount} repertório(s)</span>
       </a>
     `;
     eixosNavList.appendChild(li);
@@ -111,7 +137,19 @@ function renderizarChipsCategorias(categorias) {
 
 // 4. Renderiza a Landing Page ou lista filtrada com os Temas, Argumentos e Repertórios do banco
 function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados', destaqueBusca = '') {
-  if (!temas || temas.length === 0) {
+  temasExibidosAtualmente = temas || [];
+
+  // Filtra os temas que efetivamente serão renderizados (caso haja filtro de categoria ativo)
+  const temasParaRenderizar = temasExibidosAtualmente.filter(tema => {
+    if (categoriaSelecionada === 'todas' || temasExibidosAtualmente.length === 1) return true;
+    const repsFiltrados = (tema.repertorios || []).filter(r => r.categoria === categoriaSelecionada);
+    return repsFiltrados.length > 0;
+  });
+
+  // Atualiza a barra lateral para refletir exatamente os dados exibidos
+  renderizarMenuEixos(temasParaRenderizar);
+
+  if (temasParaRenderizar.length === 0) {
     resultsContainer.innerHTML = `
       <div class="empty-state">
         Nenhum tema encontrado para os critérios selecionados.
@@ -120,17 +158,25 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
     return;
   }
 
-  // Contagens reais dos temas exibidos
-  const eixosUnicos = new Set(temas.map(t => t.eixo_id).filter(Boolean)).size;
-  const totalArgs = temas.reduce((acc, t) => acc + (t.argumentos ? t.argumentos.length : 0), 0);
-  const totalReps = temas.reduce((acc, t) => acc + (t.repertorios ? t.repertorios.length : 0), 0);
+  // Contagens reais exatas dos cards renderizados na tela
+  const eixosUnicos = new Set(temasParaRenderizar.map(t => t.eixo_id).filter(Boolean)).size;
+  let totalArgs = 0;
+  let totalReps = 0;
 
-  const tituloPrincipal = temas.length === 1
-    ? destacarTermo(temas[0].titulo, destaqueBusca)
+  temasParaRenderizar.forEach(t => {
+    totalArgs += (t.argumentos || []).length;
+    const repsDoTema = (t.repertorios || []).filter(r =>
+      categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
+    );
+    totalReps += repsDoTema.length;
+  });
+
+  const tituloPrincipal = temasParaRenderizar.length === 1
+    ? destacarTermo(temasParaRenderizar[0].titulo, destaqueBusca)
     : 'Temas e Repertórios para Redação';
 
-  const descricaoContexto = temas.length === 1
-    ? `Eixo temático: ${temas[0].eixo || 'Geral'}`
+  const descricaoContexto = temasParaRenderizar.length === 1
+    ? `Eixo temático: ${temasParaRenderizar[0].eixo || 'Geral'}`
     : 'Consulte abaixo os temas, argumentos e repertórios socioculturais cadastrados no banco de dados.';
 
   let html = `
@@ -139,7 +185,7 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
       <h1>${tituloPrincipal}</h1>
       <p class="contexto">${descricaoContexto}</p>
       <ul class="counts">
-        <li><strong>${temas.length}</strong> ${temas.length === 1 ? 'tema' : 'temas'}</li>
+        <li><strong>${temasParaRenderizar.length}</strong> ${temasParaRenderizar.length === 1 ? 'tema' : 'temas'}</li>
         <li><strong>${eixosUnicos}</strong> ${eixosUnicos === 1 ? 'eixo' : 'eixos'}</li>
         <li><strong>${totalArgs}</strong> ${totalArgs === 1 ? 'argumento' : 'argumentos'}</li>
         <li><strong>${totalReps}</strong> ${totalReps === 1 ? 'repertório' : 'repertórios'}</li>
@@ -147,16 +193,11 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
     </header>
   `;
 
-  temas.forEach(tema => {
+  temasParaRenderizar.forEach(tema => {
     const args = tema.argumentos || [];
     const repsFiltrados = (tema.repertorios || []).filter(r =>
       categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
     );
-
-    // Se um filtro de categoria estiver ativo e o tema não tiver repertórios daquela categoria, oculta se houver mais temas
-    if (categoriaSelecionada !== 'todas' && repsFiltrados.length === 0 && temas.length > 1) {
-      return;
-    }
 
     const argsHtml = args.length > 0
       ? args.map(arg => `
@@ -222,6 +263,7 @@ async function carregarTemaPorId(id, termoDestaque = '') {
     if (!response.ok) throw new Error('Erro ao buscar detalhes do tema');
 
     const tema = await response.json();
+    eixoSelecionadoId = tema.eixo_id;
     renderizarLandingTemas([tema], `Tema #${tema.id} • ${tema.eixo}`, termoDestaque);
   } catch (error) {
     console.error('Erro ao carregar tema:', error);
@@ -301,7 +343,6 @@ function voltarParaTodosTemas() {
   searchInput.value = '';
   suggestList.style.display = 'none';
   btnVerTodos.style.display = 'none';
-  renderizarMenuEixos(todosEixos);
   document.querySelectorAll('#categoriasChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.categoria === 'todas');
   });
@@ -371,7 +412,6 @@ if (eixosNavList) {
 
     eixoSelecionadoId = parseInt(rawId, 10);
     btnVerTodos.style.display = 'inline-block';
-    renderizarMenuEixos(todosEixos);
 
     const eixoObj = todosEixos.find(x => x.id === eixoSelecionadoId);
     const filtrados = todosTemas.filter(t => t.eixo_id === eixoSelecionadoId);
