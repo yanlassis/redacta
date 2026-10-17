@@ -6,67 +6,83 @@
   <title>Redacta — Repertórios e Argumentos por Eixo Temático</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="top">
-  <div class="top-left">
-    <a class="brand" id="brandHome" href="#">Redacta</a>
-    <p class="tagline">Da ideia ao repertório nota 1000 — argumentos organizados por eixo</p>
+<header class="masthead">
+  <div class="masthead-bar">
+    <div class="masthead-left">
+      <a class="brand" id="brandHome" href="#">REDACTA</a>
+      <span class="masthead-sep" aria-hidden="true">/</span>
+      <p class="tagline">Concordância de Teses e Repertórios Socioculturais para Redação</p>
+    </div>
+    <div class="masthead-right">
+      <button type="button" class="btn-bracket" id="btnVerTodos" style="display: none;">Restaurar Catálogo Completo</button>
+      <button type="button" class="theme-toggle" id="themeToggle" title="Alternar entre modo claro e escuro" aria-label="Alternar tema">
+        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
   </div>
-  <button type="button" class="btn-home" id="btnVerTodos" style="display: none;">Ver todos os temas</button>
+
+  <div class="search-ledger">
+    <form class="search" role="search" onsubmit="return false">
+      <div class="field">
+        <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-3.5-3.5"/>
+        </svg>
+        <input
+          type="search"
+          id="searchInput"
+          name="q"
+          placeholder="Digite um tema de redação próprio, eixo, autor ou conceito..."
+          autocomplete="off"
+          aria-label="Pesquisar tema de redação"
+        >
+        <button type="submit" id="searchBtn">Consultar</button>
+      </div>
+      <ul class="suggest" id="suggestList" aria-label="Temas e recomendações"></ul>
+    </form>
+  </div>
 </header>
 
-<div class="search-wrap">
-  <form class="search" role="search" onsubmit="return false">
-    <div class="field">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="7"/>
-        <path d="m20 20-3.5-3.5"/>
-      </svg>
-      <input
-        type="search"
-        id="searchInput"
-        name="q"
-        placeholder="Pesquisar tema, eixo, argumento ou repertório..."
-        autocomplete="off"
-        aria-label="Pesquisar tema de redação"
-      >
-      <button type="submit" id="searchBtn">Buscar</button>
-    </div>
-    <ul class="suggest" id="suggestList" aria-label="Temas sugeridos"></ul>
-  </form>
-  <p class="hint">Dados carregados diretamente do banco de dados em tempo real.</p>
-</div>
-
 <main class="layout page">
-  <!-- BARRA LATERAL DINÂMICA: alimentada por /api/eixos e /api/categorias -->
+  <!-- APARATO MARGINAL ESQUERDO: Índice de Eixos e Filtro de Áreas -->
   <aside class="side">
-    <nav aria-label="Eixos temáticos">
-      <h2 class="side-title">Eixos Temáticos</h2>
+    <nav class="apparatus-block" aria-label="Eixos temáticos">
+      <h2 class="side-title">Índice de Eixos</h2>
       <ul class="index" id="eixosNavList">
-        <li><span class="qtd">Carregando eixos...</span></li>
+        <li><span class="qtd">Carregando índice...</span></li>
       </ul>
     </nav>
 
-    <fieldset class="filtro">
-      <legend class="side-title">Categoria de Repertório</legend>
+    <fieldset class="filtro apparatus-block">
+      <legend class="side-title">Área do Repertório</legend>
       <div class="chips" id="categoriasChips">
         <button type="button" class="chip active" data-categoria="todas">Todas</button>
       </div>
     </fieldset>
   </aside>
 
-  <!-- CONTEÚDO PRINCIPAL DINÂMICO: alimentado por /api/temas e /api/temas/:id -->
+  <!-- BLOCO DE REFERÊNCIA COM TRILHO CENTRAL -->
   <div class="resultado" id="resultsContainer">
-    <div class="empty-state">Carregando dados do banco de dados...</div>
+    <div class="empty-state">Sincronizando caderno de referências com o banco de dados...</div>
   </div>
 </main>
 
 <footer class="foot">
-  Redacta — Conectado ao banco de dados Supabase.
+  <div class="foot-inner">
+    <span>REDACTA — Caderno de Referência e Concordância Argumentativa</span>
+    <span>Base de dados sincronizada via Supabase</span>
+  </div>
 </footer>
 
 <script src="app.js"></script>

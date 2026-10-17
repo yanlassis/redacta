@@ -7,6 +7,27 @@ const eixosNavList = document.getElementById('eixosNavList');
 const categoriasChips = document.getElementById('categoriasChips');
 const brandHome = document.getElementById('brandHome');
 const btnVerTodos = document.getElementById('btnVerTodos');
+const themeToggle = document.getElementById('themeToggle');
+
+// Inicializa o tema (claro / escuro) com base na preferência salva ou do sistema
+function inicializarTema() {
+  const salvo = localStorage.getItem('redacta-theme');
+  if (salvo === 'light' || salvo === 'dark') {
+    document.documentElement.setAttribute('data-theme', salvo);
+  }
+}
+inicializarTema();
+
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const atual = document.documentElement.getAttribute('data-theme');
+    const prefereEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isEscuroAtualmente = atual === 'dark' || (!atual && prefereEscuro);
+    const proximo = isEscuroAtualmente ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', proximo);
+    localStorage.setItem('redacta-theme', proximo);
+  });
+}
 
 // Base da API: usa o mesmo domínio na Vercel (/api) ou localhost:3000 em ambiente local
 const API_BASE = window.location.hostname === 'localhost' && window.location.port !== '3000' && window.location.port !== ''
@@ -21,7 +42,9 @@ let eixoSelecionadoId = null;
 let categoriaSelecionada = 'todas';
 let timeoutId = null;
 
-// Utilitário para normalizar nome da categoria para o atributo data-tipo (CSS)
+const COPY_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><rect x="9" y="9" width="11" height="11"/><path d="M5 15H4V4h11v1"/></svg>`;
+const CHECK_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
+
 function normalizarTipo(categoria) {
   if (!categoria) return 'geral';
   return categoria
@@ -49,18 +72,18 @@ async function inicializarLandingPage() {
     todosTemas = await temasRes.json();
 
     renderizarChipsCategorias(categorias);
-    renderizarLandingTemas(todosTemas, 'Catálogo do Banco de Dados');
+    renderizarLandingTemas(todosTemas);
   } catch (error) {
     console.error('Erro ao inicializar a página:', error);
     resultsContainer.innerHTML = `
       <div class="empty-state">
-        Não foi possível carregar os dados do servidor. Verifique se o backend está rodando na porta 3000.
+        Não foi possível sincronizar o caderno de referências. Verifique se o servidor backend está ativo na porta 3000.
       </div>
     `;
   }
 }
 
-// 2. Renderiza a barra lateral exibindo apenas os Eixos
+// 2. Renderiza o Aparato Marginal exibindo apenas os Eixos com detents quadrados
 function renderizarMenuEixos() {
   if (!eixosNavList) return;
   eixosNavList.innerHTML = '';
@@ -107,8 +130,8 @@ function renderizarChipsCategorias(categorias) {
   });
 }
 
-// 4. Renderiza a Landing Page ou lista filtrada com os Temas, Argumentos e Repertórios do banco
-function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados', destaqueBusca = '') {
+// 4. Renderiza a Edição de Referência com os Temas, Argumentos e Repertórios do banco
+function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = '') {
   temasExibidosAtualmente = temas || [];
 
   const temasParaRenderizar = temasExibidosAtualmente.filter(tema => {
@@ -122,7 +145,7 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
   if (temasParaRenderizar.length === 0) {
     resultsContainer.innerHTML = `
       <div class="empty-state">
-        Nenhum tema encontrado para os critérios selecionados.
+        Nenhum registro localizado para os critérios selecionados. Ajuste o filtro lateral ou digite seu próprio tema na consulta acima.
       </div>
     `;
     return;
@@ -142,22 +165,23 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
 
   const tituloPrincipal = temasParaRenderizar.length === 1
     ? destacarTermo(temasParaRenderizar[0].titulo, destaqueBusca)
-    : 'Temas e Repertórios para Redação';
+    : 'Catálogo de Temas, Teses e Repertórios';
 
-  const descricaoContexto = temasParaRenderizar.length === 1
-    ? `Eixo temático: ${temasParaRenderizar[0].eixo || 'Geral'}`
-    : 'Consulte abaixo os temas, argumentos e repertórios socioculturais cadastrados no banco de dados ou digite qualquer tema de redação na barra acima.';
+  const descricaoContexto = contextoCustom
+    ? contextoCustom
+    : temasParaRenderizar.length === 1
+      ? `Eixo temático classificado: ${temasParaRenderizar[0].eixo || 'Geral'}.`
+      : 'Índice integral de temas de redação sincronizados com o banco de dados. Selecione um eixo à esquerda ou consulte qualquer tema próprio na barra superior.';
 
   let html = `
     <header class="tema">
-      <span class="tema-badge">${subtitulo}</span>
       <h1>${tituloPrincipal}</h1>
       <p class="contexto">${descricaoContexto}</p>
       <ul class="counts">
-        <li><strong>${temasParaRenderizar.length}</strong> ${temasParaRenderizar.length === 1 ? 'tema' : 'temas'}</li>
-        <li><strong>${eixosUnicos}</strong> ${eixosUnicos === 1 ? 'eixo' : 'eixos'}</li>
-        <li><strong>${totalArgs}</strong> ${totalArgs === 1 ? 'argumento' : 'argumentos'}</li>
-        <li><strong>${totalReps}</strong> ${totalReps === 1 ? 'repertório' : 'repertórios'}</li>
+        <li><strong>${temasParaRenderizar.length}</strong> ${temasParaRenderizar.length === 1 ? 'pauta catalogada' : 'pautas catalogadas'}</li>
+        <li><strong>${eixosUnicos}</strong> ${eixosUnicos === 1 ? 'eixo temático' : 'eixos temáticos'}</li>
+        <li><strong>${totalArgs}</strong> ${totalArgs === 1 ? 'tese argumentativa' : 'teses argumentativas'}</li>
+        <li><strong>${totalReps}</strong> ${totalReps === 1 ? 'repertório legitimado' : 'repertórios legitimados'}</li>
       </ul>
     </header>
   `;
@@ -171,21 +195,26 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
     const argsHtml = args.length > 0
       ? args.map(arg => `
           <article class="arg" data-copyable>
+            <div class="entry-meta">
+              <span class="entry-key">Tese Argumentativa</span>
+              <button class="copy" type="button" title="Copiar tese" aria-label="Copiar tese">${COPY_ICON_SVG}</button>
+            </div>
             <h4 class="tese" data-part>${destacarTermo(arg.descricao, destaqueBusca)}</h4>
-            <button class="copy" type="button">Copiar argumento</button>
           </article>
         `).join('')
-      : `<p class="qtd">Nenhum argumento cadastrado para este tema.</p>`;
+      : `<p class="qtd">Nenhuma tese cadastrada para este tema.</p>`;
 
     const repsHtml = repsFiltrados.length > 0
       ? repsFiltrados.map(rep => `
           <article class="rep" data-tipo="${normalizarTipo(rep.categoria)}" data-copyable>
-            <p class="rep-tipo" data-part>${rep.categoria}</p>
+            <div class="entry-meta">
+              <p class="rep-tipo" data-part>${rep.categoria}</p>
+              <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
+            </div>
             <p class="rep-desc" data-part>${destacarTermo(rep.conteudo, destaqueBusca)}</p>
-            <button class="copy" type="button">Copiar repertório</button>
           </article>
         `).join('')
-      : `<p class="qtd">Nenhum repertório nesta categoria.</p>`;
+      : `<p class="qtd">Nenhum repertório registrado nesta área.</p>`;
 
     html += `
       <section class="eixo" id="tema-${tema.id}" data-tema-id="${tema.id}">
@@ -195,15 +224,15 @@ function renderizarLandingTemas(temas, subtitulo = 'Catálogo do Banco de Dados'
               ${destacarTermo(tema.titulo, destaqueBusca)}
             </a>
           </h2>
-          <span class="eixo-tag">${tema.eixo || 'Sem eixo'}</span>
+          <span class="eixo-tag">${tema.eixo || 'Eixo Geral'}</span>
         </div>
         <div class="cols">
-          <div>
-            <h3 class="col-title">Argumentos (${args.length})</h3>
+          <div class="col-pane-left">
+            <h3 class="col-title">Teses e Argumentos (${args.length})</h3>
             ${argsHtml}
           </div>
-          <div>
-            <h3 class="col-title">Repertórios (${repsFiltrados.length})</h3>
+          <div class="col-pane-right">
+            <h3 class="col-title">Repertórios Socioculturais (${repsFiltrados.length})</h3>
             ${repsHtml}
           </div>
         </div>
@@ -229,37 +258,42 @@ function renderizarRecomendacaoTemaLivre(rec) {
 
   const argsHtml = args.map(arg => `
     <article class="arg" data-copyable>
+      <div class="entry-meta">
+        <span class="entry-key">Tese Compatível</span>
+        <button class="copy" type="button" title="Copiar tese" aria-label="Copiar tese">${COPY_ICON_SVG}</button>
+      </div>
       <h4 class="tese" data-part>${arg.descricao}</h4>
-      <p class="rep-uso" style="margin: 0 0 .6rem; font-size: .85rem; color: var(--soft);">
-        <strong>Tema de referência no banco:</strong> ${arg.tema_origem}
+      <p class="rep-uso">
+        Matriz de origem: <em>${arg.tema_origem}</em>
       </p>
-      <button class="copy" type="button">Copiar argumento</button>
     </article>
   `).join('');
 
   const repsHtml = reps.map(rep => `
     <article class="rep" data-tipo="${normalizarTipo(rep.categoria)}" data-copyable>
-      <p class="rep-tipo" data-part>${rep.categoria}</p>
+      <div class="entry-meta">
+        <p class="rep-tipo" data-part>${rep.categoria}</p>
+        <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
+      </div>
       <p class="rep-desc" data-part>${rep.conteudo}</p>
-      <p class="rep-uso" style="margin: 0 0 .6rem; font-size: .85rem; color: var(--soft);">
-        <strong>Pertinência:</strong> aplicável ao eixo <em>${rep.eixo}</em>
+      <p class="rep-uso">
+        Eixo de referência: <em>${rep.eixo}</em>
       </p>
-      <button class="copy" type="button">Copiar repertório</button>
     </article>
   `).join('');
 
   const correlatosHtml = correlatos.length > 0
     ? `
-      <section class="eixo" style="margin-top: 2rem;">
+      <section class="eixo">
         <div class="eixo-header">
-          <h2>Temas correlatos na nossa base de dados</h2>
+          <h2>Pautas correlatas no catálogo</h2>
         </div>
-        <ul class="index" style="display: grid; gap: .6rem;">
+        <ul class="correlatos-list">
           ${correlatos.map(t => `
             <li>
-              <a href="#tema-${t.id}" class="tema-link" data-tema-id="${t.id}" style="background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px;">
-                <span class="nome">${t.titulo}</span>
-                <span class="qtd">Eixo: ${t.eixo}</span>
+              <a href="#tema-${t.id}" class="tema-link" data-tema-id="${t.id}">
+                <span>${t.titulo}</span>
+                <span class="eixo-tag">${t.eixo}</span>
               </a>
             </li>
           `).join('')}
@@ -270,31 +304,30 @@ function renderizarRecomendacaoTemaLivre(rec) {
 
   resultsContainer.innerHTML = `
     <header class="tema">
-      <span class="tema-badge">Análise de Tema Personalizado • Eixo Identificado: ${rec.eixo_sugerido}</span>
       <h1>“${rec.tema_pesquisado}”</h1>
       <p class="contexto">
-        Este tema específico foi analisado por afinidade temática e associado ao eixo <strong>${rec.eixo_sugerido}</strong>.
-        Abaixo estão os argumentos e repertórios socioculturais da nossa base de dados mais adequados para fundamentar a sua redação:
+        Proposta analisada por afinidade vocabular e classificada no eixo <strong>${rec.eixo_sugerido}</strong>.
+        Abaixo estão as teses e os repertórios socioculturais da nossa base mais pertinentes para fundamentar sua redação:
       </p>
       <ul class="counts">
-        <li><strong>${rec.eixo_sugerido}</strong> (eixo principal)</li>
-        <li><strong>${args.length}</strong> argumentos recomendados</li>
+        <li>Eixo identificado: <strong>${rec.eixo_sugerido}</strong></li>
+        <li><strong>${args.length}</strong> teses recomendadas</li>
         <li><strong>${reps.length}</strong> repertórios recomendados</li>
       </ul>
     </header>
 
     <section class="eixo">
       <div class="eixo-header">
-        <h2>Estrutura recomendada para a sua redação</h2>
+        <h2>Estrutura recomendada para o tema proposto</h2>
         <span class="eixo-tag">${rec.eixo_sugerido}</span>
       </div>
       <div class="cols">
-        <div>
-          <h3 class="col-title">Argumentos Adequados (${args.length})</h3>
+        <div class="col-pane-left">
+          <h3 class="col-title">Teses Recomendadas (${args.length})</h3>
           ${argsHtml}
         </div>
-        <div>
-          <h3 class="col-title">Repertórios Adequados (${reps.length})</h3>
+        <div class="col-pane-right">
+          <h3 class="col-title">Repertórios Recomendados (${reps.length})</h3>
           ${repsHtml}
         </div>
       </div>
@@ -323,39 +356,19 @@ async function carregarTemaPorId(id, termoDestaque = '') {
 
     const tema = await response.json();
     eixoSelecionadoId = tema.eixo_id;
-    renderizarLandingTemas([tema], `Tema #${tema.id} • ${tema.eixo}`, termoDestaque);
+    renderizarLandingTemas([tema], null, termoDestaque);
   } catch (error) {
     console.error('Erro ao carregar tema:', error);
   }
 }
 
-// 7. Consulta a rota de recomendação para um tema inédito/livre digitado pelo aluno
-async function analisarTemaLivre(termo) {
-  try {
-    searchBtn.disabled = true;
-    searchBtn.textContent = 'Analisando...';
-    suggestList.style.display = 'none';
-
-    const response = await fetch(`${API_BASE}/temas/recomendar?q=${encodeURIComponent(termo)}`);
-    if (!response.ok) throw new Error('Falha ao recomendar repertórios');
-
-    const rec = await response.json();
-    renderizarRecomendacaoTemaLivre(rec);
-  } catch (error) {
-    console.error('Erro ao analisar tema livre:', error);
-  } finally {
-    searchBtn.disabled = false;
-    searchBtn.textContent = 'Buscar';
-  }
-}
-
-// 8. Busca na API (/api/temas/busca + /api/temas/recomendar) para o Autocomplete e filtragem
+// 7. Busca na API (/api/temas/busca + /api/temas/recomendar) para o Autocomplete e filtragem
 async function buscarTemas(termo, atualizarPagina = false) {
   searchBtn.disabled = true;
-  searchBtn.textContent = 'Buscando...';
+  searchBtn.textContent = 'Consultando...';
 
   suggestList.style.display = 'block';
-  suggestList.innerHTML = '<li><a href="#"><span>Buscando temas e analisando eixo...</span></a></li>';
+  suggestList.innerHTML = '<li><a href="#"><span>Consultando base de referências e analisando eixo...</span></a></li>';
 
   try {
     const [buscaRes, recRes] = await Promise.all([
@@ -374,17 +387,21 @@ async function buscarTemas(termo, atualizarPagina = false) {
         const idsEncontrados = new Set(data.map(d => d.id));
         const temasFiltrados = todosTemas.filter(t => idsEncontrados.has(t.id));
         btnVerTodos.style.display = 'inline-block';
-        renderizarLandingTemas(temasFiltrados, `Resultados para "${termo}"`, termo);
+        renderizarLandingTemas(
+          temasFiltrados,
+          `Resultados localizados no catálogo para a consulta “${termo}”.`,
+          termo
+        );
       } else if (rec) {
         renderizarRecomendacaoTemaLivre(rec);
       }
     }
   } catch (error) {
     console.error('Erro ao buscar temas:', error);
-    suggestList.innerHTML = '<li><a href="#"><span>Erro ao buscar os temas.</span></a></li>';
+    suggestList.innerHTML = '<li><a href="#"><span>Erro ao consultar a base de dados.</span></a></li>';
   } finally {
     searchBtn.disabled = false;
-    searchBtn.textContent = 'Buscar';
+    searchBtn.textContent = 'Consultar';
   }
 }
 
@@ -392,7 +409,6 @@ async function buscarTemas(termo, atualizarPagina = false) {
 function renderizarSugestoes(temas, termo, rec) {
   suggestList.innerHTML = '';
 
-  // Se houver temas exatos/parciais no banco, lista primeiro
   temas.forEach(tema => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -409,13 +425,12 @@ function renderizarSugestoes(temas, termo, rec) {
     suggestList.appendChild(li);
   });
 
-  // Sempre oferece a opção inteligente de analisar o tema exato que o aluno digitou
   if (rec && !rec.existe_exato) {
     const liCustom = document.createElement('li');
     liCustom.innerHTML = `
       <a href="#recomendar" class="suggest-custom">
-        <span>✨ Ver argumentos e repertórios para: <strong>“${termo}”</strong></span>
-        <span class="meta">Eixo: ${rec.eixo_sugerido}</span>
+        <span>Gerar concordância de teses e repertórios para: <strong>“${termo}”</strong></span>
+        <span class="meta">[EIXO: ${rec.eixo_sugerido}]</span>
       </a>
     `;
     liCustom.querySelector('a').addEventListener('click', (e) => {
@@ -436,7 +451,7 @@ function voltarParaTodosTemas() {
   document.querySelectorAll('#categoriasChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.categoria === 'todas');
   });
-  renderizarLandingTemas(todosTemas, 'Catálogo do Banco de Dados');
+  renderizarLandingTemas(todosTemas);
 }
 
 // Event Listeners de Busca (Debounce + Click + Enter)
@@ -480,7 +495,6 @@ searchInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Fechar sugestões ao clicar fora
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.search')) {
     suggestList.style.display = 'none';
@@ -505,7 +519,10 @@ if (eixosNavList) {
 
     const eixoObj = todosEixos.find(x => x.id === eixoSelecionadoId);
     const filtrados = todosTemas.filter(t => t.eixo_id === eixoSelecionadoId);
-    renderizarLandingTemas(filtrados, `Eixo Temático • ${eixoObj ? eixoObj.nome : ''}`);
+    renderizarLandingTemas(
+      filtrados,
+      `Recorte temático do eixo ${eixoObj ? eixoObj.nome : ''}.`
+    );
   });
 }
 
@@ -524,14 +541,14 @@ if (categoriasChips) {
       ? todosTemas.filter(t => t.eixo_id === eixoSelecionadoId)
       : todosTemas;
 
-    const subtitulo = categoriaSelecionada === 'todas'
-      ? 'Catálogo do Banco de Dados'
-      : `Filtrado por Repertório: ${categoriaSelecionada}`;
+    const contexto = categoriaSelecionada === 'todas'
+      ? null
+      : `Exibindo apenas pautas com repertórios na área de ${categoriaSelecionada}.`;
 
     if (categoriaSelecionada !== 'todas') {
       btnVerTodos.style.display = 'inline-block';
     }
-    renderizarLandingTemas(filtrados, subtitulo, searchInput.value.trim());
+    renderizarLandingTemas(filtrados, contexto, searchInput.value.trim());
   });
 }
 
@@ -544,7 +561,6 @@ resultsContainer.addEventListener('click', (e) => {
   }
 });
 
-// Botões de voltar à visão geral
 if (brandHome) {
   brandHome.addEventListener('click', (e) => {
     e.preventDefault();
@@ -555,7 +571,7 @@ if (btnVerTodos) {
   btnVerTodos.addEventListener('click', () => voltarParaTodosTemas());
 }
 
-// Botão de Copiar argumento ou repertório
+// Botão de Copiar argumento ou repertório com confirmação por ícone
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.copy');
   if (!btn) return;
@@ -566,15 +582,16 @@ document.addEventListener('click', async (e) => {
     .map(n => n.textContent.trim())
     .join(' — ');
 
-  const original = btn.textContent;
   try {
     await navigator.clipboard.writeText(text);
-    btn.textContent = 'Copiado!';
+    btn.innerHTML = CHECK_ICON_SVG;
+    btn.classList.add('copied');
   } catch (err) {
-    btn.textContent = 'Erro ao copiar';
+    console.error('Falha ao copiar:', err);
   }
   setTimeout(() => {
-    btn.textContent = original;
+    btn.innerHTML = COPY_ICON_SVG;
+    btn.classList.remove('copied');
   }, 1500);
 });
 
