@@ -15,9 +15,17 @@
   --c-literatura: #A23A5E;
   --c-livro: #A23A5E;
   --c-legislacao: #2F5DA8;
+  --c-direito: #2F5DA8;
   --c-comunicacao: #85690A;
   --c-audiovisual: #B83A2E;
   --c-filme: #B83A2E;
+  --c-historia: #8C5A2B;
+  --c-geografia: #1E7E48;
+  --c-antropologia: #9C4221;
+  --c-economia: #1D5B79;
+  --c-educacao: #435334;
+  --c-linguistica: #7A3E65;
+  --c-urbanismo: #3A6B88;
 
   --serif: "Newsreader", Georgia, "Times New Roman", serif;
   --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -36,9 +44,17 @@
     --c-literatura: #F08CAE;
     --c-livro: #F08CAE;
     --c-legislacao: #8DB4F5;
+    --c-direito: #8DB4F5;
     --c-comunicacao: #E2C25A;
     --c-audiovisual: #F0897D;
     --c-filme: #F0897D;
+    --c-historia: #E5B280;
+    --c-geografia: #6DD69C;
+    --c-antropologia: #F29B76;
+    --c-economia: #74B9E0;
+    --c-educacao: #A3C985;
+    --c-linguistica: #DF95C5;
+    --c-urbanismo: #88C0E0;
   }
 }
 
@@ -54,9 +70,17 @@
   --c-literatura: #F08CAE;
   --c-livro: #F08CAE;
   --c-legislacao: #8DB4F5;
+  --c-direito: #8DB4F5;
   --c-comunicacao: #E2C25A;
   --c-audiovisual: #F0897D;
   --c-filme: #F0897D;
+  --c-historia: #E5B280;
+  --c-geografia: #6DD69C;
+  --c-antropologia: #F29B76;
+  --c-economia: #74B9E0;
+  --c-educacao: #A3C985;
+  --c-linguistica: #DF95C5;
+  --c-urbanismo: #88C0E0;
 }
 
 /* ---------- Base ---------- */
@@ -394,14 +418,30 @@ fieldset.filtro legend { padding: 0; }
   margin-bottom: 1.25rem;
 }
 .rep:last-child { margin-bottom: 0; }
-.rep[data-tipo="filosofia"]   { --tipo: var(--c-filosofia); }
-.rep[data-tipo="sociologia"]  { --tipo: var(--c-sociologia); }
-.rep[data-tipo="literatura"]  { --tipo: var(--c-literatura); }
-.rep[data-tipo="livro"]       { --tipo: var(--c-livro); }
-.rep[data-tipo="legislacao"]  { --tipo: var(--c-legislacao); }
-.rep[data-tipo="comunicacao"] { --tipo: var(--c-comunicacao); }
-.rep[data-tipo="audiovisual"] { --tipo: var(--c-audiovisual); }
-.rep[data-tipo="filme"]       { --tipo: var(--c-filme); }
+.rep[data-tipo="filosofia"]          { --tipo: var(--c-filosofia); }
+.rep[data-tipo="psiquiatria"]        { --tipo: var(--c-filosofia); }
+.rep[data-tipo="sociologia"]         { --tipo: var(--c-sociologia); }
+.rep[data-tipo="saude coletiva"]     { --tipo: var(--c-sociologia); }
+.rep[data-tipo="literatura"]         { --tipo: var(--c-literatura); }
+.rep[data-tipo="livro"]              { --tipo: var(--c-livro); }
+.rep[data-tipo="legislacao"]         { --tipo: var(--c-legislacao); }
+.rep[data-tipo="direito"]            { --tipo: var(--c-direito); }
+.rep[data-tipo="ciencia politica"]   { --tipo: var(--c-direito); }
+.rep[data-tipo="seguranca publica"]  { --tipo: var(--c-direito); }
+.rep[data-tipo="comunicacao"]        { --tipo: var(--c-comunicacao); }
+.rep[data-tipo="tecnologia"]         { --tipo: var(--c-comunicacao); }
+.rep[data-tipo="pesquisa"]           { --tipo: var(--c-comunicacao); }
+.rep[data-tipo="audiovisual"]        { --tipo: var(--c-audiovisual); }
+.rep[data-tipo="filme"]              { --tipo: var(--c-filme); }
+.rep[data-tipo="historia"]           { --tipo: var(--c-historia); }
+.rep[data-tipo="geografia"]          { --tipo: var(--c-geografia); }
+.rep[data-tipo="ecologia politica"]  { --tipo: var(--c-geografia); }
+.rep[data-tipo="antropologia"]       { --tipo: var(--c-antropologia); }
+.rep[data-tipo="economia"]           { --tipo: var(--c-economia); }
+.rep[data-tipo="economia feminista"] { --tipo: var(--c-economia); }
+.rep[data-tipo="educacao"]           { --tipo: var(--c-educacao); }
+.rep[data-tipo="linguistica"]        { --tipo: var(--c-linguistica); }
+.rep[data-tipo="urbanismo"]          { --tipo: var(--c-urbanismo); }
 .rep-tipo {
   font-size: .8rem;
   font-weight: 700;
