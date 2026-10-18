@@ -35,16 +35,6 @@
       </nav>
     </div>
 
-    <div class="sidebar-footer">
-      <div class="promo-card">
-        <svg class="promo-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M22 10L12 5 2 10l10 5 10-5z"/>
-          <path d="M6 12.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/>
-          <path d="M22 10v6"/>
-        </svg>
-        <p>Domine seu repertório. Transforme ideias em <strong>argumentos.</strong></p>
-      </div>
-    </div>
   </aside>
 
   <!-- ÁREA PRINCIPAL DIREITA -->
@@ -86,37 +76,14 @@
 
     <!-- CONTEÚDO CENTRAL DO DASHBOARD -->
     <main class="dashboard-content">
-      <!-- Banner Hero estilo referência -->
-      <section class="hero-banner" id="heroBanner">
-        <div class="hero-left">
-          <div class="hero-circle-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="8" y1="13" x2="16" y2="13"/>
-              <line x1="8" y1="17" x2="13" y2="17"/>
-            </svg>
-          </div>
-          <div class="hero-copy">
-            <h1>Explore repertórios por temas</h1>
-            <p>História, Filosofia, Sociologia, Literatura, Atualidades e mais — ou pesquise seu próprio tema acima.</p>
-          </div>
-        </div>
-        <a href="#resultsContainer" class="hero-btn" id="heroExploreBtn">
-          <span>Explorar agora</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
-        </a>
+      <!-- Introdução compacta -->
+      <section class="page-intro">
+        <h1>Repertórios por tema</h1>
+        <p>Escolha uma categoria ou pesquise seu próprio tema na busca acima.</p>
       </section>
 
-      <!-- Seção de Categorias Ilustradas (vindas da API) -->
+      <!-- Categorias agrupadas (vindas da API) -->
       <section class="categories-section" aria-label="Categorias de repertório">
-        <div class="section-head">
-          <h2>Categorias</h2>
-          <button type="button" class="link-action" id="btnLimparCategoria">Ver todas</button>
-        </div>
         <div class="category-cards" id="categoriasChips">
           <span class="qtd">Carregando categorias...</span>
         </div>

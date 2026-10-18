@@ -611,6 +611,43 @@ mark {
   opacity: 0.92;
 }
 
+/* ---------- Compact page intro (replaces the hero banner) ---------- */
+.page-intro h1 {
+  font-family: var(--display);
+  font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+  color: var(--ink);
+}
+
+.page-intro p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+}
+
+/* ---------- "Ver mais" inside theme cards ---------- */
+.entry-list:not(.expanded) .is-extra {
+  display: none;
+}
+
+.ver-mais {
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.1rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: var(--sans);
+  font-size: 0.84rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ver-mais:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
 /* ---------- Categories Grid (Illustrated Cards) ---------- */
 .section-head {
   display: flex;
@@ -646,8 +683,8 @@ mark {
 
 .category-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
 }
 
 .cat-card {

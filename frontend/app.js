@@ -30,10 +30,67 @@ if (themeToggle) {
   });
 }
 
-// Base da API: usa o mesmo domínio na Vercel (/api) ou localhost:3000 em ambiente local
-const API_BASE = window.location.hostname === 'localhost' && window.location.port !== '3000' && window.location.port !== ''
-  ? 'http://localhost:3000/api'
-  : '/api';
+// Configuração e resolução dinâmica da API
+const VERCEL_API_BASE = 'https://redacta-phi.vercel.app/api';
+const LOCAL_API_BASE = 'http://localhost:3000/api';
+
+// Identifica se está rodando localmente (Live Server em 127.0.0.1, localhost ou file:)
+const isLocalEnv = ['localhost', '127.0.0.1', ''].includes(window.location.hostname) || window.location.protocol === 'file:';
+
+// Em produção (Vercel), utiliza rota relativa '/api'. Em local, tenta o backend na porta 3000 e faz fallback para a Vercel
+let currentApiBase = isLocalEnv ? LOCAL_API_BASE : '/api';
+let apiResolved = !isLocalEnv;
+
+async function resolverApiBase() {
+  if (apiResolved) return currentApiBase;
+
+  // Se o frontend estiver rodando na mesma porta do Express (porta 3000)
+  if (window.location.port === '3000') {
+    currentApiBase = '/api';
+    apiResolved = true;
+    return currentApiBase;
+  }
+
+  // Testa se o backend local na porta 3000 está respondendo com timeout rápido de 800ms
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 800);
+    const testRes = await fetch(`${LOCAL_API_BASE}/categorias`, { signal: controller.signal });
+    clearTimeout(timer);
+    if (testRes.ok) {
+      currentApiBase = LOCAL_API_BASE;
+      apiResolved = true;
+      console.log('⚡ Conectado ao backend local na porta 3000');
+      return currentApiBase;
+    }
+  } catch (e) {
+    // Backend local indisponível, faz fallback
+  }
+
+  currentApiBase = VERCEL_API_BASE;
+  apiResolved = true;
+  console.log('🌐 Backend local (porta 3000) indisponível. Usando API de produção na Vercel:', VERCEL_API_BASE);
+  return currentApiBase;
+}
+
+// Wrapper para requisições à API com suporte a fallback
+async function apiFetch(endpoint, options = {}) {
+  const base = await resolverApiBase();
+  try {
+    return await fetch(`${base}${endpoint}`, options);
+  } catch (err) {
+    // Se o backend local falhar durante a navegação, tenta a Vercel
+    if (base !== VERCEL_API_BASE && isLocalEnv) {
+      console.warn('Falha na requisição local. Alternando para a API da Vercel...', err);
+      currentApiBase = VERCEL_API_BASE;
+      return await fetch(`${VERCEL_API_BASE}${endpoint}`, options);
+    }
+    throw err;
+  }
+}
+
+// Mantido para compatibilidade
+const API_BASE = currentApiBase;
 
 // Estado da aplicação carregado do banco
 let todosTemas = [];
@@ -129,13 +186,36 @@ function normalizarTipo(categoria) {
     .trim();
 }
 
+// Macro-categorias: agrupa as categorias do banco em poucos blocos para reduzir a poluição visual
+const GRUPOS_CATEGORIA = [
+  { nome: 'Filosofia e Sociedade', chaves: ['filosofia', 'sociologia', 'antropologia', 'psiquiatria', 'psicologia', 'saude', 'religiao', 'etica'] },
+  { nome: 'História e Política', chaves: ['historia', 'politica', 'direito', 'legislacao', 'constituicao', 'cidadania'] },
+  { nome: 'Literatura e Educação', chaves: ['literatura', 'livro', 'educacao', 'linguistica', 'arte', 'cinema', 'musica', 'cultura'] },
+  { nome: 'Geografia e Ciência', chaves: ['geografia', 'ecologia', 'urbanismo', 'economia', 'ciencia', 'ambiente', 'biologia'] }
+];
+const GRUPO_PADRAO = 'Atualidades';
+
+function grupoDaCategoria(categoria) {
+  const n = normalizarTipo(categoria);
+  const grupo = GRUPOS_CATEGORIA.find(g => g.chaves.some(chave => n.includes(chave)));
+  return grupo ? grupo.nome : GRUPO_PADRAO;
+}
+
+function repassaFiltroCategoria(rep) {
+  return categoriaSelecionada === 'todas' || grupoDaCategoria(rep.categoria) === categoriaSelecionada;
+}
+
+// Quantidade de itens visíveis por coluna antes do "Ver mais"
+const LIMITE_TESES = 2;
+const LIMITE_REPERTORIOS = 3;
+
 // 1. Inicialização da Landing Page (carrega apenas o que existe no banco)
 async function inicializarLandingPage() {
   try {
     const [eixosRes, categoriasRes, temasRes] = await Promise.all([
-      fetch(`${API_BASE}/eixos`),
-      fetch(`${API_BASE}/categorias`),
-      fetch(`${API_BASE}/temas`)
+      apiFetch('/eixos'),
+      apiFetch('/categorias'),
+      apiFetch('/temas')
     ]);
 
     if (!eixosRes.ok || !temasRes.ok) {
@@ -150,9 +230,21 @@ async function inicializarLandingPage() {
     renderizarLandingTemas(todosTemas);
   } catch (error) {
     console.error('Erro ao inicializar a página:', error);
+    if (categoriasChips) {
+      categoriasChips.innerHTML = '<span class="qtd">Categorias temporariamente indisponíveis.</span>';
+    }
+    if (eixosNavList) {
+      eixosNavList.innerHTML = '<li><span class="qtd">Eixos indisponíveis.</span></li>';
+    }
     resultsContainer.innerHTML = `
       <div class="empty-state">
-        Não foi possível carregar os repertórios. Verifique se o servidor backend está ativo na porta 3000.
+        <p>Não foi possível carregar os repertórios do banco de dados.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem; color: var(--text-muted, #64748b);">
+          Verifique sua conexão com a internet ou se o backend local está ativo na porta 3000.
+        </p>
+        <button type="button" class="hero-btn" style="margin-top: 1rem; display: inline-flex; cursor: pointer;" onclick="location.reload()">
+          Tentar novamente
+        </button>
       </div>
     `;
   }
@@ -208,7 +300,10 @@ function renderizarChipsCategorias(categorias) {
   `;
   categoriasChips.appendChild(btnTodas);
 
-  categorias.forEach(cat => {
+  const presentes = new Set((categorias || []).map(grupoDaCategoria));
+  const gruposVisiveis = [...GRUPOS_CATEGORIA.map(g => g.nome), GRUPO_PADRAO].filter(nome => presentes.has(nome));
+
+  gruposVisiveis.forEach(cat => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `cat-card ${categoriaSelecionada === cat ? 'active' : ''}`;
@@ -227,7 +322,7 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
 
   const temasParaRenderizar = temasExibidosAtualmente.filter(tema => {
     if (categoriaSelecionada === 'todas' || temasExibidosAtualmente.length === 1) return true;
-    const repsFiltrados = (tema.repertorios || []).filter(r => r.categoria === categoriaSelecionada);
+    const repsFiltrados = (tema.repertorios || []).filter(repassaFiltroCategoria);
     return repsFiltrados.length > 0;
   });
 
@@ -247,9 +342,7 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
 
   temasParaRenderizar.forEach(t => {
     totalArgs += (t.argumentos || []).length;
-    const repsDoTema = (t.repertorios || []).filter(r =>
-      categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
-    );
+    const repsDoTema = (t.repertorios || []).filter(repassaFiltroCategoria);
     totalReps += repsDoTema.length;
   });
 
@@ -279,13 +372,18 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
 
   temasParaRenderizar.forEach((tema, idx) => {
     const args = tema.argumentos || [];
-    const repsFiltrados = (tema.repertorios || []).filter(r =>
-      categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
-    );
+    const repsFiltrados = (tema.repertorios || []).filter(repassaFiltroCategoria);
+
+    // Com um único tema em foco mostra tudo; na listagem geral, só os primeiros itens
+    const expandido = temasParaRenderizar.length === 1;
+    const extra = (i, limite) => (!expandido && i >= limite ? ' is-extra' : '');
+    const botaoMais = (total, limite) => (!expandido && total > limite)
+      ? `<button type="button" class="ver-mais" data-restantes="${total - limite}">Ver mais (${total - limite})</button>`
+      : '';
 
     const argsHtml = args.length > 0
-      ? args.map(arg => `
-          <article class="arg" data-copyable>
+      ? args.map((arg, i) => `
+          <article class="arg${extra(i, LIMITE_TESES)}" data-copyable>
             <div class="entry-meta">
               <span class="entry-key">Tese Argumentativa</span>
               <button class="copy" type="button" title="Copiar tese" aria-label="Copiar tese">${COPY_ICON_SVG}</button>
@@ -296,8 +394,8 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
       : `<p class="qtd">Nenhuma tese cadastrada para este tema.</p>`;
 
     const repsHtml = repsFiltrados.length > 0
-      ? repsFiltrados.map(rep => `
-          <article class="rep" data-tipo="${normalizarTipo(rep.categoria)}" data-copyable>
+      ? repsFiltrados.map((rep, i) => `
+          <article class="rep${extra(i, LIMITE_REPERTORIOS)}" data-tipo="${normalizarTipo(rep.categoria)}" data-copyable>
             <div class="entry-meta">
               <p class="rep-tipo" data-part>${rep.categoria}</p>
               <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
@@ -324,16 +422,18 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
         </div>
         <div class="cols">
           <div class="col-pane-left">
-            <h4 class="col-title">Teses e Argumentos (${args.length})</h4>
+            <h4 class="col-title">Teses (${args.length})</h4>
             <div class="entry-list">
               ${argsHtml}
             </div>
+            ${botaoMais(args.length, LIMITE_TESES)}
           </div>
           <div class="col-pane-right">
-            <h4 class="col-title">Repertórios Socioculturais (${repsFiltrados.length})</h4>
+            <h4 class="col-title">Repertórios (${repsFiltrados.length})</h4>
             <div class="entry-list">
               ${repsHtml}
             </div>
+            ${botaoMais(repsFiltrados.length, LIMITE_REPERTORIOS)}
           </div>
         </div>
       </section>
@@ -351,9 +451,7 @@ function renderizarRecomendacaoTemaLivre(rec) {
   renderizarMenuEixos();
 
   const args = rec.argumentos || [];
-  const reps = (rec.repertorios || []).filter(r =>
-    categoriaSelecionada === 'todas' || r.categoria === categoriaSelecionada
-  );
+  const reps = (rec.repertorios || []).filter(repassaFiltroCategoria);
   const correlatos = rec.temas_correlatos || [];
 
   const argsHtml = args.map(arg => `
@@ -458,7 +556,7 @@ async function carregarTemaPorId(id, termoDestaque = '') {
     suggestList.style.display = 'none';
     btnVerTodos.style.display = 'inline-block';
 
-    const response = await fetch(`${API_BASE}/temas/${id}`);
+    const response = await apiFetch(`/temas/${id}`);
     if (!response.ok) throw new Error('Erro ao buscar detalhes do tema');
 
     const tema = await response.json();
@@ -479,8 +577,8 @@ async function buscarTemas(termo, atualizarPagina = false) {
 
   try {
     const [buscaRes, recRes] = await Promise.all([
-      fetch(`${API_BASE}/temas/busca?q=${encodeURIComponent(termo)}`),
-      fetch(`${API_BASE}/temas/recomendar?q=${encodeURIComponent(termo)}`)
+      apiFetch(`/temas/busca?q=${encodeURIComponent(termo)}`),
+      apiFetch(`/temas/recomendar?q=${encodeURIComponent(termo)}`)
     ]);
 
     const data = buscaRes.ok ? await buscaRes.json() : [];
@@ -690,6 +788,16 @@ if (brandHome) {
 if (btnVerTodos) {
   btnVerTodos.addEventListener('click', () => voltarParaTodosTemas());
 }
+
+// "Ver mais" / "Ver menos" nas colunas do card de tema
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.ver-mais');
+  if (!btn) return;
+  const lista = btn.previousElementSibling;
+  if (!lista) return;
+  const aberto = lista.classList.toggle('expanded');
+  btn.textContent = aberto ? 'Ver menos' : `Ver mais (${btn.dataset.restantes})`;
+});
 
 // Botão de Copiar argumento ou repertório com confirmação por ícone
 document.addEventListener('click', async (e) => {

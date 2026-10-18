@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
@@ -8,6 +9,7 @@ const port = process.env.PORT || 3000;
 // cfg middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Teste de conexão ao iniciar o servidor
 pool.connect((err, client, release) => {
