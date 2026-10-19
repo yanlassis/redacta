@@ -9,6 +9,16 @@ const brandHome = document.getElementById('brandHome');
 const btnVerTodos = document.getElementById('btnVerTodos');
 const btnLimparCategoria = document.getElementById('btnLimparCategoria');
 const themeToggle = document.getElementById('themeToggle');
+const mobileEixosBtn = document.getElementById('mobileEixosBtn');
+const mobileEixosLabel = document.getElementById('mobileEixosLabel');
+const sidebarScroll = document.getElementById('sidebarScroll');
+
+if (mobileEixosBtn && sidebarScroll) {
+  mobileEixosBtn.addEventListener('click', () => {
+    const aberto = sidebarScroll.classList.toggle('is-open');
+    mobileEixosBtn.setAttribute('aria-expanded', String(aberto));
+  });
+}
 
 // Inicializa o tema (claro / escuro) com base na preferência salva ou do sistema
 function inicializarTema() {
@@ -405,9 +415,11 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
         `).join('')
       : `<p class="qtd">Nenhum repertório registrado nesta categoria.</p>`;
 
+    const isMobileAberto = expandido || idx === 0 ? ' is-open-mobile' : '';
+
     html += `
-      <section class="tema-card" id="tema-${tema.id}" data-tema-id="${tema.id}">
-        <div class="tema-card-top">
+      <section class="tema-card${isMobileAberto}" id="tema-${tema.id}" data-tema-id="${tema.id}">
+        <div class="tema-card-top" data-toggle-card>
           <div class="tema-icon-box" aria-hidden="true">
             ${obterIconeCardTema(idx)}
           </div>
@@ -417,8 +429,16 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
                 ${destacarTermo(tema.titulo, destaqueBusca)}
               </a>
             </h3>
-            <span class="badge-pill">${tema.eixo || 'Eixo Geral'}</span>
+            <div class="tema-submeta">
+              <span class="badge-pill">${tema.eixo || 'Eixo Geral'}</span>
+              <span class="mobile-card-hint">${args.length} teses · ${repsFiltrados.length} repertórios</span>
+            </div>
           </div>
+          <button type="button" class="mobile-card-chevron" aria-label="Expandir ou recolher tema">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
         </div>
         <div class="cols">
           <div class="col-pane-left">
@@ -713,8 +733,14 @@ if (eixosNavList) {
     if (!link) return;
     e.preventDefault();
 
+    if (sidebarScroll && mobileEixosBtn) {
+      sidebarScroll.classList.remove('is-open');
+      mobileEixosBtn.setAttribute('aria-expanded', 'false');
+    }
+
     const rawId = link.dataset.eixoId;
     if (rawId === 'todos') {
+      if (mobileEixosLabel) mobileEixosLabel.textContent = 'Eixos';
       voltarParaTodosTemas();
       return;
     }
@@ -723,6 +749,9 @@ if (eixosNavList) {
     btnVerTodos.style.display = 'inline-block';
 
     const eixoObj = todosEixos.find(x => x.id === eixoSelecionadoId);
+    if (mobileEixosLabel && eixoObj) {
+      mobileEixosLabel.textContent = eixoObj.nome.split(',')[0];
+    }
     const filtrados = todosTemas.filter(t => t.eixo_id === eixoSelecionadoId);
     renderizarLandingTemas(
       filtrados,
@@ -770,8 +799,20 @@ if (btnLimparCategoria) {
   });
 }
 
-// Clicar no título de um tema na listagem abre o foco naquele tema
+// No celular (< 960px), tocar no cabeçalho do card abre/fecha o acordeão; no desktop, abre o foco no tema
 resultsContainer.addEventListener('click', (e) => {
+  const cardTop = e.target.closest('[data-toggle-card]');
+  const isMobile = window.matchMedia('(max-width: 960px)').matches;
+
+  if (cardTop && isMobile) {
+    e.preventDefault();
+    const card = cardTop.closest('.tema-card');
+    if (card) {
+      card.classList.toggle('is-open-mobile');
+    }
+    return;
+  }
+
   const temaLink = e.target.closest('.tema-link');
   if (temaLink) {
     e.preventDefault();
@@ -782,11 +823,15 @@ resultsContainer.addEventListener('click', (e) => {
 if (brandHome) {
   brandHome.addEventListener('click', (e) => {
     e.preventDefault();
+    if (mobileEixosLabel) mobileEixosLabel.textContent = 'Eixos';
     voltarParaTodosTemas();
   });
 }
 if (btnVerTodos) {
-  btnVerTodos.addEventListener('click', () => voltarParaTodosTemas());
+  btnVerTodos.addEventListener('click', () => {
+    if (mobileEixosLabel) mobileEixosLabel.textContent = 'Eixos';
+    voltarParaTodosTemas();
+  });
 }
 
 // "Ver mais" / "Ver menos" nas colunas do card de tema
