@@ -170,7 +170,7 @@ function pontuarTexto(textoAlvo, tokensUsuario, radicaisUsuario) {
       pontos += 12; // Match exato de palavra
       termosEncontrados.add(token);
     } else if (radical.length >= 4 && palavrasAlvo.some(p => p.startsWith(radical) || radical.startsWith(p.slice(0, 5)))) {
-      pontos += 7; // Match de radical morfológico (ex: queimadas <-> queima, ambiental <-> ambiente, ilegal <-> ilegalmente)
+      pontos += 7; // Match de radical morfológico
       termosEncontrados.add(token);
     }
   });
@@ -194,7 +194,6 @@ app.get('/api/temas/recomendar', async (req, res) => {
     const tokensUsuario = extrairTokens(temaUsuario);
     const radicaisUsuario = extrairRadicais(tokensUsuario);
 
-    // Carrega todos os dados reais do banco
     const [eixosRes, temasRes, argsRes, repsRes] = await Promise.all([
       pool.query('SELECT id, nome FROM eixos ORDER BY id ASC'),
       pool.query(`
@@ -220,7 +219,6 @@ app.get('/api/temas/recomendar', async (req, res) => {
       `)
     ]);
 
-    // 1.1 Pontua os Eixos Temáticos (combinando nome do eixo + mapa semântico)
     const pontuacaoEixos = {};
     eixosRes.rows.forEach(eixo => {
       const { pontos: ptsNome } = pontuarTexto(eixo.nome, tokensUsuario, radicaisUsuario);
@@ -229,7 +227,6 @@ app.get('/api/temas/recomendar', async (req, res) => {
       pontuacaoEixos[eixo.id] = ptsNome * 2 + ptsCampo;
     });
 
-    // 1.2 Pontua todos os Temas do banco para achar os temas-irmãos mais próximos
     const temasPontuados = temasRes.rows.map(t => {
       const { pontos: ptsTitulo, termosEncontrados } = pontuarTexto(t.titulo, tokensUsuario, radicaisUsuario);
       const bonusEixo = (pontuacaoEixos[t.eixo_id] || 0) * 0.6;
@@ -240,17 +237,14 @@ app.get('/api/temas/recomendar', async (req, res) => {
       };
     }).sort((a, b) => b.score - a.score);
 
-    // Identifica o Eixo Principal mais compatível
     const melhorTema = temasPontuados[0];
     const eixoPrincipalId = melhorTema && melhorTema.score > 0 ? melhorTema.eixo_id : 1;
     const eixoPrincipalNome = (eixosRes.rows.find(e => e.id === eixoPrincipalId) || {}).nome || 'Geral';
 
-    // Verifica se o tema digitado já existe exatamente no banco
     const matchExato = temasRes.rows.find(
       t => normalizarTexto(t.titulo) === normalizarTexto(temaUsuario)
     );
 
-    // 1.3 Pontua todos os Argumentos do banco para selecionar os mais adequados ao tema do usuário
     const argumentosUnicos = new Map();
     argsRes.rows.forEach(arg => {
       const { pontos: ptsDesc } = pontuarTexto(arg.descricao, tokensUsuario, radicaisUsuario);
@@ -272,9 +266,8 @@ app.get('/api/temas/recomendar', async (req, res) => {
 
     const argumentosRecomendados = Array.from(argumentosUnicos.values())
       .sort((a, b) => b.score - a.score)
-      .slice(0, 4);
+      .slice(0, 6);
 
-    // 1.4 Pontua todos os Repertórios do banco para selecionar os mais pertinentes
     const repertoriosUnicos = new Map();
     repsRes.rows.forEach(rep => {
       const { pontos: ptsConteudo } = pontuarTexto(rep.conteudo, tokensUsuario, radicaisUsuario);
@@ -297,12 +290,11 @@ app.get('/api/temas/recomendar', async (req, res) => {
 
     const repertoriosRecomendados = Array.from(repertoriosUnicos.values())
       .sort((a, b) => b.score - a.score)
-      .slice(0, 4);
+      .slice(0, 6);
 
-    // Temas correlatos do banco que ajudam o aluno
     const temasCorrelatos = temasPontuados
       .filter(t => t.score > 0 || t.eixo_id === eixoPrincipalId)
-      .slice(0, 3)
+      .slice(0, 4)
       .map(({ id, titulo, eixo_id, eixo }) => ({ id, titulo, eixo_id, eixo }));
 
     res.json({
@@ -372,40 +364,77 @@ app.get('/api/temas/busca', async (req, res) => {
   }
 });
 
-// 3. Rota para listar todos os temas com seus argumentos e repertórios diretamente do banco
+// 3. Rota para listar todos os temas com seus argumentos e repertórios (próprios + relacionados por afinidade no eixo)
 app.get('/api/temas', async (req, res) => {
   try {
-    const temasRes = await pool.query(`
-      SELECT t.id, t.titulo, t.eixo_id, e.nome AS eixo
-      FROM temas t
-      LEFT JOIN eixos e ON t.eixo_id = e.id
-      ORDER BY t.id ASC
-    `);
+    const [temasRes, argsRes, repsRes] = await Promise.all([
+      pool.query(`
+        SELECT t.id, t.titulo, t.eixo_id, e.nome AS eixo
+        FROM temas t
+        LEFT JOIN eixos e ON t.eixo_id = e.id
+        ORDER BY t.id ASC
+      `),
+      pool.query(`
+        SELECT ta.tema_id, a.id, a.descricao, t.titulo AS tema_origem, t.eixo_id
+        FROM argumentos a
+        JOIN tema_argumento ta ON ta.argumento_id = a.id
+        JOIN temas t ON t.id = ta.tema_id
+        ORDER BY a.id ASC
+      `),
+      pool.query(`
+        SELECT DISTINCT ta.tema_id, r.id, r.categoria, r.conteudo, t.titulo AS tema_origem, t.eixo_id
+        FROM repertorios r
+        JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
+        JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
+        JOIN temas t ON t.id = ta.tema_id
+        ORDER BY r.id ASC
+      `)
+    ]);
 
-    const argsRes = await pool.query(`
-      SELECT ta.tema_id, a.id, a.descricao
-      FROM argumentos a
-      JOIN tema_argumento ta ON ta.argumento_id = a.id
-      ORDER BY a.id ASC
-    `);
+    const temasCompletos = temasRes.rows.map(tema => {
+      const tokensTema = extrairTokens(tema.titulo);
+      const radicaisTema = extrairRadicais(tokensTema);
 
-    const repsRes = await pool.query(`
-      SELECT DISTINCT ta.tema_id, r.id, r.categoria, r.conteudo
-      FROM repertorios r
-      JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
-      JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
-      ORDER BY r.id ASC
-    `);
-
-    const temasCompletos = temasRes.rows.map(tema => ({
-      ...tema,
-      argumentos: argsRes.rows
+      const argsDiretos = argsRes.rows
         .filter(a => a.tema_id === tema.id)
-        .map(({ id, descricao }) => ({ id, descricao })),
-      repertorios: repsRes.rows
+        .map(({ id, descricao }) => ({ id, descricao, direto: true }));
+
+      const idsArgsDiretos = new Set(argsDiretos.map(a => a.id));
+
+      // Busca +4 teses relacionadas do mesmo eixo ordenadas por afinidade vocabular com o tema
+      const argsRelacionados = argsRes.rows
+        .filter(a => a.eixo_id === tema.eixo_id && !idsArgsDiretos.has(a.id))
+        .map(a => {
+          const { pontos } = pontuarTexto(`${a.descricao} ${a.tema_origem}`, tokensTema, radicaisTema);
+          return { id: a.id, descricao: a.descricao, tema_origem: a.tema_origem, direto: false, score: pontos };
+        })
+        .sort((a, b) => b.score - a.score || a.id - b.id)
+        .slice(0, 4)
+        .map(({ id, descricao, tema_origem, direto }) => ({ id, descricao, tema_origem, direto }));
+
+      const repsDiretos = repsRes.rows
         .filter(r => r.tema_id === tema.id)
-        .map(({ id, categoria, conteudo }) => ({ id, categoria, conteudo }))
-    }));
+        .map(({ id, categoria, conteudo }) => ({ id, categoria, conteudo, direto: true }));
+
+      const idsRepsDiretos = new Set(repsDiretos.map(r => r.id));
+
+      // Busca +4 repertórios relacionados do mesmo eixo ordenados por afinidade vocabular
+      const repsRelacionados = repsRes.rows
+        .filter(r => r.eixo_id === tema.eixo_id && !idsRepsDiretos.has(r.id))
+        .map(r => {
+          const { pontos } = pontuarTexto(`${r.conteudo} ${r.tema_origem}`, tokensTema, radicaisTema);
+          return { id: r.id, categoria: r.categoria, conteudo: r.conteudo, tema_origem: r.tema_origem, direto: false, score: pontos };
+        })
+        .sort((a, b) => b.score - a.score || a.id - b.id)
+        .slice(0, 4)
+        .map(({ id, categoria, conteudo, tema_origem, direto }) => ({ id, categoria, conteudo, tema_origem, direto }));
+
+      return {
+        ...tema,
+        argumentos: [...argsDiretos, ...argsRelacionados],
+        repertorios: [...repsDiretos, ...repsRelacionados]
+      };
+    });
 
     res.json(temasCompletos);
   } catch (erro) {
@@ -414,7 +443,7 @@ app.get('/api/temas', async (req, res) => {
   }
 });
 
-// 4. Rota para buscar detalhes completos de um tema específico
+// 4. Rota para buscar detalhes completos de um tema específico (incluindo teses e repertórios relacionados do eixo)
 app.get('/api/temas/:id', async (req, res) => {
   try {
     const temaId = parseInt(req.params.id, 10);
@@ -435,30 +464,80 @@ app.get('/api/temas/:id', async (req, res) => {
     }
 
     const tema = temaRes.rows[0];
+    const tokensTema = extrairTokens(tema.titulo);
+    const radicaisTema = extrairRadicais(tokensTema);
 
-    const argsRes = await pool.query(
-      `SELECT a.id, a.descricao
-       FROM argumentos a
-       JOIN tema_argumento ta ON ta.argumento_id = a.id
-       WHERE ta.tema_id = $1
-       ORDER BY a.id ASC`,
-      [temaId]
-    );
+    const [argsDiretosRes, argsEixoRes, repsDiretosRes, repsEixoRes] = await Promise.all([
+      pool.query(
+        `SELECT a.id, a.descricao
+         FROM argumentos a
+         JOIN tema_argumento ta ON ta.argumento_id = a.id
+         WHERE ta.tema_id = $1
+         ORDER BY a.id ASC`,
+        [temaId]
+      ),
+      pool.query(
+        `SELECT DISTINCT a.id, a.descricao, t.titulo AS tema_origem
+         FROM argumentos a
+         JOIN tema_argumento ta ON ta.argumento_id = a.id
+         JOIN temas t ON t.id = ta.tema_id
+         WHERE t.eixo_id = $1 AND t.id <> $2
+         ORDER BY a.id ASC`,
+        [tema.eixo_id, temaId]
+      ),
+      pool.query(
+        `SELECT DISTINCT r.id, r.categoria, r.conteudo
+         FROM repertorios r
+         JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
+         JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
+         WHERE ta.tema_id = $1
+         ORDER BY r.id ASC`,
+        [temaId]
+      ),
+      pool.query(
+        `SELECT DISTINCT r.id, r.categoria, r.conteudo, t.titulo AS tema_origem
+         FROM repertorios r
+         JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
+         JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
+         JOIN temas t ON t.id = ta.tema_id
+         WHERE t.eixo_id = $1 AND t.id <> $2
+         ORDER BY r.id ASC`,
+        [tema.eixo_id, temaId]
+      )
+    ]);
 
-    const repsRes = await pool.query(
-      `SELECT DISTINCT r.id, r.categoria, r.conteudo
-       FROM repertorios r
-       JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
-       JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
-       WHERE ta.tema_id = $1
-       ORDER BY r.id ASC`,
-      [temaId]
-    );
+    const idsArgsDiretos = new Set(argsDiretosRes.rows.map(a => a.id));
+    const argsRelacionados = argsEixoRes.rows
+      .filter(a => !idsArgsDiretos.has(a.id))
+      .map(a => {
+        const { pontos } = pontuarTexto(`${a.descricao} ${a.tema_origem}`, tokensTema, radicaisTema);
+        return { ...a, direto: false, score: pontos };
+      })
+      .sort((a, b) => b.score - a.score || a.id - b.id)
+      .slice(0, 6)
+      .map(({ id, descricao, tema_origem, direto }) => ({ id, descricao, tema_origem, direto }));
+
+    const idsRepsDiretos = new Set(repsDiretosRes.rows.map(r => r.id));
+    const repsRelacionados = repsEixoRes.rows
+      .filter(r => !idsRepsDiretos.has(r.id))
+      .map(r => {
+        const { pontos } = pontuarTexto(`${r.conteudo} ${r.tema_origem}`, tokensTema, radicaisTema);
+        return { ...r, direto: false, score: pontos };
+      })
+      .sort((a, b) => b.score - a.score || a.id - b.id)
+      .slice(0, 6)
+      .map(({ id, categoria, conteudo, tema_origem, direto }) => ({ id, categoria, conteudo, tema_origem, direto }));
 
     res.json({
       ...tema,
-      argumentos: argsRes.rows,
-      repertorios: repsRes.rows
+      argumentos: [
+        ...argsDiretosRes.rows.map(a => ({ ...a, direto: true })),
+        ...argsRelacionados
+      ],
+      repertorios: [
+        ...repsDiretosRes.rows.map(r => ({ ...r, direto: true })),
+        ...repsRelacionados
+      ]
     });
   } catch (erro) {
     console.error('Erro ao buscar detalhes do tema:', erro);

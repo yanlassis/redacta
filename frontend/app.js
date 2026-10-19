@@ -215,9 +215,9 @@ function repassaFiltroCategoria(rep) {
   return categoriaSelecionada === 'todas' || grupoDaCategoria(rep.categoria) === categoriaSelecionada;
 }
 
-// Quantidade de itens visíveis por coluna antes do "Ver mais"
+// Quantidade de itens visíveis por coluna antes do "Ver mais" ou do clique no tema
 const LIMITE_TESES = 2;
-const LIMITE_REPERTORIOS = 3;
+const LIMITE_REPERTORIOS = 2;
 
 // 1. Inicialização da Landing Page (carrega apenas o que existe no banco)
 async function inicializarLandingPage() {
@@ -387,18 +387,19 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
     // Com um único tema em foco mostra tudo; na listagem geral, só os primeiros itens
     const expandido = temasParaRenderizar.length === 1;
     const extra = (i, limite) => (!expandido && i >= limite ? ' is-extra' : '');
-    const botaoMais = (total, limite) => (!expandido && total > limite)
-      ? `<button type="button" class="ver-mais" data-restantes="${total - limite}">Ver mais (${total - limite})</button>`
+    const botaoMais = (total, limite, rotulo) => (!expandido && total > limite)
+      ? `<button type="button" class="ver-mais" data-restantes="${total - limite}" data-rotulo="${rotulo}">Ver mais ${total - limite} ${rotulo}</button>`
       : '';
 
     const argsHtml = args.length > 0
       ? args.map((arg, i) => `
           <article class="arg${extra(i, LIMITE_TESES)}" data-copyable>
             <div class="entry-meta">
-              <span class="entry-key">Tese Argumentativa</span>
+              <span class="entry-key">${arg.direto === false ? 'Tese Relacionada' : 'Tese Argumentativa'}</span>
               <button class="copy" type="button" title="Copiar tese" aria-label="Copiar tese">${COPY_ICON_SVG}</button>
             </div>
             <h4 class="tese" data-part>${destacarTermo(arg.descricao, destaqueBusca)}</h4>
+            ${arg.direto === false && arg.tema_origem ? `<p class="rep-uso">Tema correlato: <em>${destacarTermo(arg.tema_origem, destaqueBusca)}</em></p>` : ''}
           </article>
         `).join('')
       : `<p class="qtd">Nenhuma tese cadastrada para este tema.</p>`;
@@ -411,6 +412,7 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
               <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
             </div>
             <p class="rep-desc" data-part>${destacarTermo(rep.conteudo, destaqueBusca)}</p>
+            ${rep.direto === false && rep.tema_origem ? `<p class="rep-uso">Tema correlato: <em>${destacarTermo(rep.tema_origem, destaqueBusca)}</em></p>` : ''}
           </article>
         `).join('')
       : `<p class="qtd">Nenhum repertório registrado nesta categoria.</p>`;
@@ -446,14 +448,14 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
             <div class="entry-list">
               ${argsHtml}
             </div>
-            ${botaoMais(args.length, LIMITE_TESES)}
+            ${botaoMais(args.length, LIMITE_TESES, 'teses relacionadas')}
           </div>
           <div class="col-pane-right">
             <h4 class="col-title">Repertórios (${repsFiltrados.length})</h4>
             <div class="entry-list">
               ${repsHtml}
             </div>
-            ${botaoMais(repsFiltrados.length, LIMITE_REPERTORIOS)}
+            ${botaoMais(repsFiltrados.length, LIMITE_REPERTORIOS, 'repertórios relacionados')}
           </div>
         </div>
       </section>
@@ -799,24 +801,43 @@ if (btnLimparCategoria) {
   });
 }
 
-// No celular (< 960px), tocar no cabeçalho do card abre/fecha o acordeão; no desktop, abre o foco no tema
+// Clicar na seta ou em um card fechado no celular abre o acordeão; clicar no título do tema (ou cabeçalho no desktop) abre o tema completo com todas as teses e repertórios relacionados
 resultsContainer.addEventListener('click', (e) => {
+  const chevronBtn = e.target.closest('.mobile-card-chevron');
   const cardTop = e.target.closest('[data-toggle-card]');
+  const temaLink = e.target.closest('.tema-link');
   const isMobile = window.matchMedia('(max-width: 960px)').matches;
 
-  if (cardTop && isMobile) {
+  if (chevronBtn && isMobile) {
     e.preventDefault();
-    const card = cardTop.closest('.tema-card');
+    const card = chevronBtn.closest('.tema-card');
     if (card) {
       card.classList.toggle('is-open-mobile');
     }
     return;
   }
 
-  const temaLink = e.target.closest('.tema-link');
+  if (cardTop && isMobile) {
+    const card = cardTop.closest('.tema-card');
+    if (card && !card.classList.contains('is-open-mobile')) {
+      e.preventDefault();
+      card.classList.add('is-open-mobile');
+      return;
+    }
+  }
+
   if (temaLink) {
     e.preventDefault();
     carregarTemaPorId(temaLink.dataset.temaId, searchInput.value.trim());
+    return;
+  }
+
+  if (cardTop && !isMobile) {
+    const card = cardTop.closest('.tema-card');
+    if (card && card.dataset.temaId) {
+      e.preventDefault();
+      carregarTemaPorId(card.dataset.temaId, searchInput.value.trim());
+    }
   }
 });
 
@@ -841,7 +862,8 @@ document.addEventListener('click', (e) => {
   const lista = btn.previousElementSibling;
   if (!lista) return;
   const aberto = lista.classList.toggle('expanded');
-  btn.textContent = aberto ? 'Ver menos' : `Ver mais (${btn.dataset.restantes})`;
+  const rotulo = btn.dataset.rotulo || '';
+  btn.textContent = aberto ? 'Ver menos' : `Ver mais ${btn.dataset.restantes} ${rotulo}`.trim();
 });
 
 // Botão de Copiar argumento ou repertório com confirmação por ícone
