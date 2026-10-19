@@ -156,8 +156,8 @@ mark {
   background: var(--mark-bg);
   color: var(--mark-fg);
   font-weight: 500;
-  padding: 0.05em 0.25em;
-  border-radius: 4px;
+  padding: 0.05em 0;
+  border-radius: 2px;
 }
 
 :focus-visible {
