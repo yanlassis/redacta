@@ -909,3 +909,260 @@ SELECT setval('eixos_id_seq', (SELECT MAX(id) FROM eixos));
 SELECT setval('temas_id_seq', (SELECT MAX(id) FROM temas));
 SELECT setval('argumentos_id_seq', (SELECT MAX(id) FROM argumentos));
 SELECT setval('repertorios_id_seq', (SELECT MAX(id) FROM repertorios));
+
+-- ============================================================================
+-- 13. TEMAS OFICIAIS DA REDAÇÃO DO ENEM (2000 a 2025 — aplicação regular)
+-- Temas 85 a 110 | Argumentos 169 a 220 | Repertórios 170 a 221
+-- ============================================================================
+
+INSERT INTO temas (id, titulo, eixo_id) VALUES
+(85, 'Direitos da criança e do adolescente: como enfrentar esse desafio nacional', 9),                                  -- Enem 2000
+(86, 'Desenvolvimento e preservação ambiental: como conciliar os interesses em conflito?', 4),                           -- Enem 2001
+(87, 'O direito de votar: como fazer dessa conquista um meio para promover as transformações sociais de que o Brasil necessita?', 8), -- Enem 2002
+(88, 'A violência na sociedade brasileira: como mudar as regras desse jogo', 8),                                          -- Enem 2003
+(89, 'Como garantir a liberdade de informação e evitar abusos nos meios de comunicação', 2),                              -- Enem 2004
+(90, 'O trabalho infantil na realidade brasileira', 9),                                                                   -- Enem 2005
+(91, 'O poder de transformação da leitura', 3),                                                                           -- Enem 2006
+(92, 'O desafio de se conviver com a diferença', 5),                                                                      -- Enem 2007
+(93, 'Como preservar a floresta Amazônica: suspender imediatamente o desmatamento; dar incentivos financeiros a proprietários que deixarem de desmatar; ou aumentar a fiscalização e aplicar multas a quem desmatar', 4), -- Enem 2008
+(94, 'O indivíduo frente à ética nacional', 8),                                                                           -- Enem 2009
+(95, 'O trabalho na construção da dignidade humana', 7),                                                                  -- Enem 2010
+(96, 'Viver em rede no século XXI: os limites entre o público e o privado', 2),                                           -- Enem 2011
+(97, 'O movimento imigratório para o Brasil no século XXI', 5),                                                           -- Enem 2012
+(98, 'Efeitos da implantação da Lei Seca no Brasil', 10),                                                                 -- Enem 2013
+(99, 'Publicidade infantil em questão no Brasil', 9),                                                                     -- Enem 2014
+(100, 'A persistência da violência contra a mulher na sociedade brasileira', 5),                                          -- Enem 2015
+(101, 'Caminhos para combater a intolerância religiosa no Brasil', 6),                                                    -- Enem 2016
+(102, 'Desafios para a formação educacional de surdos no Brasil', 3),                                                     -- Enem 2017
+(103, 'Manipulação do comportamento do usuário pelo controle de dados na internet', 2),                                   -- Enem 2018
+(104, 'Democratização do acesso ao cinema no Brasil', 6),                                                                 -- Enem 2019
+(105, 'O estigma associado às doenças mentais na sociedade brasileira', 1),                                               -- Enem 2020
+(106, 'Invisibilidade e registro civil: garantia de acesso à cidadania no Brasil', 5),                                    -- Enem 2021
+(107, 'Desafios para a valorização de comunidades e povos tradicionais no Brasil', 6),                                    -- Enem 2022
+(108, 'Desafios para o enfrentamento da invisibilidade do trabalho de cuidado realizado pela mulher no Brasil', 7),        -- Enem 2023
+(109, 'Desafios para a valorização da herança africana no Brasil', 6),                                                    -- Enem 2024
+(110, 'Perspectivas acerca do envelhecimento na sociedade brasileira', 5);                                                -- Enem 2025
+
+-- 14. ARGUMENTOS DOS TEMAS DO ENEM (169 a 220 — 2 por tema)
+INSERT INTO argumentos (id, descricao) VALUES
+-- Tema 85 (Enem 2000 — Direitos da criança e do adolescente)
+(169, 'A distância entre a proteção integral prevista em lei e a realidade de crianças pobres, negras e periféricas revela que o Estado garante direitos no papel, mas falha na oferta de escola, saúde e convivência familiar segura.'),
+(170, 'A fragilidade da rede de proteção — conselhos tutelares sem estrutura e subnotificação da violência doméstica e sexual — mantém crianças expostas a abusos justamente nos espaços que deveriam protegê-las.'),
+-- Tema 86 (Enem 2001 — Desenvolvimento e preservação ambiental)
+(171, 'A falsa dicotomia entre crescimento econômico e preservação sustenta um modelo predatório que converte florestas em pasto e commodities, transferindo os custos ambientais para as próximas gerações.'),
+(172, 'Instrumentos de economia verde, como o pagamento por serviços ambientais e a bioeconomia, mostram que a floresta em pé pode gerar mais renda que a devastação, conciliando os interesses em conflito.'),
+-- Tema 87 (Enem 2002 — O direito de votar)
+(173, 'O voto, conquistado após longas exclusões de mulheres, analfabetos e pobres, perde sua potência transformadora quando o eleitor é tratado como cliente, alvo de clientelismo e compra de votos.'),
+(174, 'A baixa formação política e a desinformação reduzem a participação a um ato isolado a cada eleição, enfraquecendo a fiscalização dos eleitos e o controle social sobre as políticas públicas.'),
+-- Tema 88 (Enem 2003 — A violência na sociedade brasileira)
+(175, 'A violência brasileira tem endereço e cor: concentra-se nas periferias e vitima sobretudo jovens negros, reflexo de uma desigualdade estrutural que o Estado enfrenta mais com repressão do que com políticas sociais.'),
+(176, 'A lógica da guerra às drogas e o encarceramento em massa alimentam um ciclo em que prisões superlotadas fortalecem facções criminosas e devolvem à sociedade indivíduos mais violentos.'),
+-- Tema 89 (Enem 2004 — Liberdade de informação e abusos nos meios de comunicação)
+(177, 'A concentração dos meios de comunicação em poucos grupos familiares compromete a pluralidade de vozes e transforma a liberdade de informação em privilégio de quem controla a mídia.'),
+(178, 'Garantir a liberdade de expressão não significa tolerar abusos: a disseminação de notícias falsas e a violação da honra exigem responsabilização posterior, sem recair na censura prévia vedada pela Constituição.'),
+-- Tema 90 (Enem 2005 — O trabalho infantil na realidade brasileira)
+(179, 'O trabalho infantil é perpetuado pela pobreza e por uma cultura que o naturaliza como formativo, roubando da criança o tempo de brincar e estudar e reproduzindo a exclusão entre gerações.'),
+(180, 'As formas invisíveis de exploração, como o trabalho doméstico, o rural familiar e o aliciamento pelo tráfico, escapam à fiscalização e mantêm crianças fora do alcance das políticas de proteção.'),
+-- Tema 91 (Enem 2006 — O poder de transformação da leitura)
+(181, 'A leitura transforma o indivíduo ao ampliar seu repertório crítico e sua capacidade de compreender o mundo, mas o acesso desigual a livros e bibliotecas faz dela um privilégio de classe no Brasil.'),
+(182, 'A ausência de mediadores de leitura e de exemplo familiar faz com que muitos jovens associem o livro à obrigação escolar, e não ao prazer e à autonomia intelectual.'),
+-- Tema 92 (Enem 2007 — O desafio de se conviver com a diferença)
+(183, 'A intolerância à diferença nasce de estereótipos aprendidos socialmente e se manifesta em racismo, LGBTfobia e capacitismo, negando a muitos grupos o exercício pleno da cidadania.'),
+(184, 'A escola é espaço decisivo para a convivência democrática, pois o contato com a diversidade desde a infância desconstrói preconceitos que a família e a mídia podem reforçar.'),
+-- Tema 93 (Enem 2008 — Como preservar a floresta Amazônica)
+(185, 'O desmatamento da Amazônia é movido por grilagem, pecuária extensiva e impunidade, de modo que apenas uma fiscalização efetiva, com multas cobradas e áreas embargadas, quebra o ciclo de destruição.'),
+(186, 'Incentivos financeiros a quem preserva, aliados à bioeconomia das comunidades locais, tornam a floresta em pé mais lucrativa do que derrubada, complementando as ações de comando e controle.'),
+-- Tema 94 (Enem 2009 — O indivíduo frente à ética nacional)
+(187, 'A tolerância cotidiana a pequenas transgressões, o chamado "jeitinho brasileiro", normaliza a corrupção e enfraquece a confiança da população nas instituições.'),
+(188, 'A ética pública depende de cidadãos que fiscalizam e de instituições transparentes, pois a responsabilidade individual não se sustenta sem punição efetiva aos desvios dos agentes públicos.'),
+-- Tema 95 (Enem 2010 — O trabalho na construção da dignidade humana)
+(189, 'O trabalho só constrói dignidade quando oferece direitos, salário justo e reconhecimento; a informalidade e a precarização reduzem o trabalhador a mero instrumento de produção.'),
+(190, 'A persistência do trabalho análogo à escravidão no Brasil mostra que a herança escravocrata ainda define quem realiza os trabalhos mais degradantes e menos protegidos.'),
+-- Tema 96 (Enem 2011 — Viver em rede: público e privado)
+(191, 'A exposição voluntária da intimidade nas redes sociais dilui as fronteiras entre o público e o privado, transformando a vida pessoal em espetáculo em busca de visibilidade e aprovação.'),
+(192, 'A falta de educação digital deixa os usuários vulneráveis a crimes como o vazamento de imagens íntimas e o cyberbullying, nos quais a exposição na rede gera danos permanentes.'),
+-- Tema 97 (Enem 2012 — O movimento imigratório para o Brasil)
+(193, 'O Brasil se apresenta como país acolhedor, mas imigrantes haitianos, venezuelanos e africanos enfrentam xenofobia, racismo e barreiras para validar diplomas e acessar empregos formais.'),
+(194, 'A acolhida humanitária representa um avanço, mas a interiorização de imigrantes sem políticas locais de integração mantém muitos deles em subempregos e moradias precárias.'),
+-- Tema 98 (Enem 2013 — Efeitos da implantação da Lei Seca)
+(195, 'A Lei Seca reduziu mortes no trânsito ao instituir tolerância zero ao álcool, mas seus efeitos dependem de fiscalização contínua, que ainda é irregular fora das capitais.'),
+(196, 'A cultura que associa lazer ao consumo de álcool e a sensação de impunidade levam muitos motoristas a desafiar a lei, o que exige campanhas educativas além da punição.'),
+-- Tema 99 (Enem 2014 — Publicidade infantil)
+(197, 'A publicidade dirigida a crianças explora sua incapacidade de distinguir entretenimento de persuasão, estimulando o consumismo precoce e hábitos alimentares nocivos.'),
+(198, 'Com a migração da publicidade para youtubers mirins e influenciadores digitais, a regulação pensada para a televisão tornou-se insuficiente para proteger a infância do marketing disfarçado.'),
+-- Tema 100 (Enem 2015 — Violência contra a mulher)
+(199, 'A violência contra a mulher persiste porque o machismo estrutural naturaliza o controle masculino sobre o corpo e a vida feminina, do ciúme possessivo ao feminicídio.'),
+(200, 'Apesar de leis avançadas, a falta de delegacias especializadas, casas-abrigo e medidas protetivas fiscalizadas faz com que muitas mulheres não denunciem ou voltem a ser agredidas.'),
+-- Tema 101 (Enem 2016 — Intolerância religiosa)
+(201, 'A intolerância religiosa no Brasil atinge principalmente as religiões de matriz africana, revelando que o preconceito religioso é também uma expressão do racismo estrutural.'),
+(202, 'A laicidade do Estado garante a liberdade de crença, mas a omissão na punição de ataques a terreiros e o uso político da fé ameaçam a convivência entre as diferentes religiões.'),
+-- Tema 102 (Enem 2017 — Formação educacional de surdos)
+(203, 'A formação educacional de surdos esbarra na escassez de professores bilíngues e de intérpretes de Libras, o que transforma a inclusão escolar em mera presença física, sem aprendizagem real.'),
+(204, 'O desconhecimento da Libras pela maioria ouvinte isola os surdos também fora da escola, restringindo seu acesso ao trabalho, à saúde e à vida cultural.'),
+-- Tema 103 (Enem 2018 — Manipulação do comportamento pelo controle de dados)
+(205, 'Algoritmos de recomendação usam dados pessoais para prever e moldar desejos, criando bolhas de informação que limitam a autonomia do usuário e polarizam o debate público.'),
+(206, 'O modelo de negócio das plataformas digitais, baseado na atenção e na venda de perfis comportamentais, transforma o usuário em produto, muitas vezes sem consentimento consciente.'),
+-- Tema 104 (Enem 2019 — Democratização do acesso ao cinema)
+(207, 'O acesso ao cinema concentra-se nas capitais e nos shoppings de bairros ricos, de modo que a grande maioria dos municípios brasileiros não possui uma única sala de exibição.'),
+(208, 'A valorização da produção audiovisual nacional e de cineclubes periféricos é essencial para que a população se veja representada nas telas e exerça seu direito à cultura.'),
+-- Tema 105 (Enem 2020 — Estigma associado às doenças mentais)
+(209, 'O estigma faz com que transtornos mentais sejam vistos como fraqueza ou "frescura", levando as pessoas a esconder o sofrimento e a adiar a busca por tratamento.'),
+(210, 'A rede pública de atenção psicossocial é insuficiente diante da demanda, o que restringe o cuidado em saúde mental a quem pode pagar por psicólogos e psiquiatras.'),
+-- Tema 106 (Enem 2021 — Invisibilidade e registro civil)
+(211, 'A falta de certidão de nascimento torna milhares de brasileiros invisíveis para o Estado, impedindo o acesso a escola, saúde, programas sociais e demais documentos básicos.'),
+(212, 'O sub-registro concentra-se em populações pobres, indígenas e de regiões remotas, de modo que a invisibilidade civil aprofunda as desigualdades que já as marginalizam.'),
+-- Tema 107 (Enem 2022 — Comunidades e povos tradicionais)
+(213, 'Povos indígenas, quilombolas, ribeirinhos e outras comunidades tradicionais sofrem com a insegurança territorial, pois a demora na demarcação expõe suas terras a grileiros, garimpeiros e ao avanço do agronegócio.'),
+(214, 'A desvalorização dos saberes tradicionais apaga conhecimentos sobre biodiversidade e manejo sustentável que são estratégicos para o enfrentamento da crise climática.'),
+-- Tema 108 (Enem 2023 — Trabalho de cuidado realizado pela mulher)
+(215, 'O trabalho de cuidado com filhos, idosos e a casa recai desproporcionalmente sobre as mulheres e, por não ser remunerado, é tratado como obrigação natural, e não como trabalho.'),
+(216, 'A sobrecarga do cuidado limita a escolaridade, a carreira e a renda das mulheres, sobretudo das negras e pobres, ampliando a desigualdade de gênero no mercado de trabalho.'),
+-- Tema 109 (Enem 2024 — Herança africana)
+(217, 'A herança africana estrutura a cultura brasileira na língua, na religião, na culinária e na música, mas é frequentemente folclorizada ou apagada pelo racismo estrutural.'),
+(218, 'O ensino superficial da história africana e afro-brasileira nas escolas impede que os estudantes reconheçam a contribuição dos povos africanos para além da escravidão.'),
+-- Tema 110 (Enem 2025 — Envelhecimento)
+(219, 'O envelhecimento acelerado da população brasileira exige adaptar saúde, previdência e cidades, mas o país envelhece antes de enriquecer e sem uma estrutura pública de cuidado para os idosos.'),
+(220, 'O etarismo associa a velhice à improdutividade e à incapacidade, gerando exclusão no mercado de trabalho, violência e abandono, sobretudo dos idosos mais pobres.');
+
+-- 15. REPERTÓRIOS DOS TEMAS DO ENEM (170 a 221 — 2 por tema)
+INSERT INTO repertorios (id, categoria, conteudo) VALUES
+-- Tema 85 (Enem 2000)
+(170, 'Legislação', 'Estatuto da Criança e do Adolescente (Lei nº 8.069/1990) e art. 227 da Constituição Federal — consagram a doutrina da proteção integral e determinam que família, sociedade e Estado assegurem, com absoluta prioridade, os direitos de crianças e adolescentes.'),
+(171, 'Pesquisa', 'Panorama da Violência Letal e Sexual contra Crianças e Adolescentes no Brasil (UNICEF e Fórum Brasileiro de Segurança Pública, 2021) — registrou cerca de 35 mil mortes violentas intencionais de crianças e adolescentes entre 2016 e 2020 e mostrou que a maior parte da violência sexual contra crianças ocorre dentro de casa, praticada por conhecidos.'),
+-- Tema 86 (Enem 2001)
+(172, 'Ecologia Política', 'Relatório "Nosso Futuro Comum" (Comissão Brundtland, ONU, 1987) — definiu desenvolvimento sustentável como aquele que satisfaz as necessidades do presente sem comprometer a capacidade das gerações futuras de satisfazerem as suas.'),
+(173, 'Legislação', 'Política Nacional de Pagamento por Serviços Ambientais (Lei nº 14.119/2021) — cria mecanismos para remunerar produtores rurais e comunidades que conservam vegetação nativa, nascentes e biodiversidade, tornando a preservação economicamente vantajosa.'),
+-- Tema 87 (Enem 2002)
+(174, 'História', 'Código Eleitoral de 1932 e Constituição de 1988 — o primeiro garantiu o voto feminino no Brasil, e a Carta de 1988 consolidou o voto dos analfabetos e tornou o voto facultativo para jovens de 16 e 17 anos, ampliando a cidadania política.'),
+(175, 'Legislação', 'Lei da Ficha Limpa (Lei Complementar nº 135/2010) — nascida de um projeto de iniciativa popular com mais de 1,6 milhão de assinaturas, torna inelegíveis por oito anos políticos condenados por órgão colegiado, exemplo de participação cidadã que vai além do voto.'),
+-- Tema 88 (Enem 2003)
+(176, 'Pesquisa', 'Atlas da Violência (Ipea e Fórum Brasileiro de Segurança Pública) — mostra de forma recorrente que pessoas negras representam cerca de três em cada quatro vítimas de homicídio no Brasil e que os jovens são a faixa etária mais atingida.'),
+(177, 'Sociologia', 'Loïc Wacquant, sociólogo francês autor de "As Prisões da Miséria" (1999) — demonstra como o enfraquecimento do Estado social é acompanhado pelo fortalecimento do Estado penal, que passa a gerir a pobreza por meio da polícia e do encarceramento.'),
+-- Tema 89 (Enem 2004)
+(178, 'Pesquisa', 'Monitor da Propriedade da Mídia no Brasil (Repórteres Sem Fronteiras e Intervozes, 2017) — revelou que os 50 veículos de maior audiência do país pertencem a apenas 26 grupos, a maioria controlada por famílias, o que indica alto risco à pluralidade.'),
+(179, 'Legislação', 'Art. 5º, V, e art. 220 da Constituição Federal — asseguram o direito de resposta e a indenização por dano à imagem e vedam toda censura de natureza política, ideológica e artística, equilibrando liberdade de expressão e responsabilidade.'),
+-- Tema 90 (Enem 2005)
+(180, 'Pesquisa', 'PNAD Contínua do IBGE (2023) — registrou cerca de 1,6 milhão de crianças e adolescentes de 5 a 17 anos em situação de trabalho infantil no Brasil, a maioria pretos ou pardos.'),
+(181, 'Legislação', 'Convenção nº 182 da OIT e Decreto nº 6.481/2008 (Lista TIP) — definem as piores formas de trabalho infantil, incluindo o trabalho doméstico e a utilização de crianças no tráfico de drogas, proibidas para menores de 18 anos.'),
+-- Tema 91 (Enem 2006)
+(182, 'Pesquisa', 'Retratos da Leitura no Brasil (Instituto Pró-Livro, 6ª edição, 2024) — pela primeira vez, a maioria dos brasileiros (53%) foi classificada como não leitora, ou seja, não leu nem parte de um livro nos três meses anteriores à pesquisa.'),
+(183, 'Educação', 'Paulo Freire, em "A importância do ato de ler" (1981) — defende que "a leitura do mundo precede a leitura da palavra", entendendo a leitura como instrumento de libertação e de consciência crítica.'),
+-- Tema 92 (Enem 2007)
+(184, 'Antropologia', 'Claude Lévi-Strauss, em "Raça e História" (1952) — critica o etnocentrismo, a tendência de julgar outras culturas pelos próprios valores, e afirma que "o bárbaro é, antes de tudo, o homem que crê na barbárie".'),
+(185, 'Legislação', 'Lei nº 7.716/1989 e Lei Brasileira de Inclusão (Lei nº 13.146/2015) — tipificam os crimes de preconceito de raça, cor, etnia, religião e procedência nacional, aplicados pelo STF também à homotransfobia (ADO 26, 2019), e garantem a inclusão da pessoa com deficiência.'),
+-- Tema 93 (Enem 2008)
+(186, 'Pesquisa', 'Sistema PRODES do INPE — a taxa anual de desmatamento da Amazônia Legal caiu de cerca de 13 mil km² em 2021 para cerca de 6,3 mil km² em 2024, após a retomada da fiscalização do Ibama e do Plano de Ação para Prevenção e Controle do Desmatamento (PPCDAm).'),
+(187, 'Economia', 'Fundo Amazônia (criado em 2008) — mecanismo financiado sobretudo por doações da Noruega e da Alemanha e gerido pelo BNDES, que apoia projetos de prevenção, monitoramento e uso sustentável da floresta, premiando a redução do desmatamento.'),
+-- Tema 94 (Enem 2009)
+(188, 'Sociologia', 'Sérgio Buarque de Holanda, em "Raízes do Brasil" (1936) — descreve o "homem cordial", que tende a confundir o público e o privado e a guiar-se por relações pessoais, e não por regras impessoais, traço que dificulta a ética republicana.'),
+(189, 'Legislação', 'Lei de Acesso à Informação (Lei nº 12.527/2011) e Lei Anticorrupção (Lei nº 12.846/2013) — ampliam a transparência dos dados públicos e responsabilizam empresas por atos lesivos contra a administração pública.'),
+-- Tema 95 (Enem 2010)
+(190, 'Filosofia', 'Karl Marx, nos "Manuscritos Econômico-Filosóficos" (1844) — desenvolve o conceito de trabalho alienado, no qual o trabalhador não se reconhece no que produz e se torna estranho a si mesmo, perdendo a dimensão humanizadora do trabalho.'),
+(191, 'Pesquisa', 'Ministério do Trabalho e Emprego — desde 1995, mais de 60 mil trabalhadores foram resgatados de condições análogas à escravidão no Brasil, e 2023 registrou mais de 3 mil resgates, o maior número desde 2009.'),
+-- Tema 96 (Enem 2011)
+(192, 'Antropologia', 'Paula Sibilia, antropóloga autora de "O show do eu: a intimidade como espetáculo" (2008) — analisa como as redes transformam a intimidade em vitrine e a subjetividade em algo construído para ser visto pelos outros.'),
+(193, 'Legislação', 'Lei Carolina Dieckmann (Lei nº 12.737/2012) — tipificou a invasão de dispositivos informáticos após o vazamento de fotos íntimas da atriz, tornando-se marco na proteção da privacidade no ambiente digital.'),
+-- Tema 97 (Enem 2012)
+(194, 'Legislação', 'Lei de Migração (Lei nº 13.445/2017) — substituiu o Estatuto do Estrangeiro, herdado da ditadura militar, e passou a tratar a migração como direito humano, repudiando a xenofobia e a discriminação.'),
+(195, 'Pesquisa', 'Operação Acolhida (Governo Federal e agências da ONU) — desde 2018, interiorizou mais de 100 mil refugiados e migrantes venezuelanos de Roraima para outras cidades brasileiras, embora a integração ao mercado formal siga como desafio.'),
+-- Tema 98 (Enem 2013)
+(196, 'Legislação', 'Lei Seca (Lei nº 11.705/2008), endurecida pela Lei nº 12.760/2012 — estabeleceu tolerância zero para álcool ao volante e permitiu comprovar a embriaguez por vídeo, testemunhos e outros meios além do bafômetro.'),
+(197, 'Saúde Coletiva', 'Relatório Global sobre Segurança Viária da Organização Mundial da Saúde (2023) — os sinistros de trânsito matam cerca de 1,19 milhão de pessoas por ano no mundo, e dirigir sob efeito de álcool está entre os principais fatores de risco evitáveis.'),
+-- Tema 99 (Enem 2014)
+(198, 'Legislação', 'Resolução nº 163/2014 do Conanda e art. 37 do Código de Defesa do Consumidor — consideram abusiva a publicidade que se aproveita da deficiência de julgamento e experiência da criança.'),
+(199, 'Audiovisual', 'Documentário "Criança, a Alma do Negócio" (Estela Renner, 2008) — mostra como o mercado transforma crianças em consumidoras e em promotoras de compras dentro da própria família.'),
+-- Tema 100 (Enem 2015)
+(200, 'Legislação', 'Lei Maria da Penha (Lei nº 11.340/2006) e Lei do Feminicídio (Lei nº 13.104/2015) — criaram mecanismos para coibir a violência doméstica e qualificaram o assassinato de mulheres por razões de gênero como crime hediondo.'),
+(201, 'Filosofia', 'Simone de Beauvoir, em "O Segundo Sexo" (1949) — afirma que "ninguém nasce mulher: torna-se mulher", mostrando que a subordinação feminina é uma construção social, e não um destino biológico.'),
+-- Tema 101 (Enem 2016)
+(202, 'História', 'Mãe Gilda de Ogum e Lei nº 11.635/2007 — a ialorixá baiana morreu em 2000 após ter seu terreiro depredado e sua imagem difamada; em sua memória, 21 de janeiro tornou-se o Dia Nacional de Combate à Intolerância Religiosa.'),
+(203, 'Legislação', 'Art. 5º, VI, e art. 19 da Constituição Federal — garantem a inviolabilidade da liberdade de consciência e de crença e a proteção aos locais de culto, ao mesmo tempo que proíbem o Estado de subvencionar ou embaraçar o funcionamento de cultos religiosos.'),
+-- Tema 102 (Enem 2017)
+(204, 'Legislação', 'Lei nº 10.436/2002 e Lei nº 14.191/2021 — a primeira reconheceu a Libras como meio legal de comunicação e expressão, e a segunda incluiu a educação bilíngue de surdos como modalidade de ensino na LDB.'),
+(205, 'Pesquisa', 'Censo Demográfico do IBGE (2010) — cerca de 9,7 milhões de brasileiros declararam algum grau de deficiência auditiva, dos quais mais de 2 milhões com deficiência severa, evidenciando a dimensão da demanda por acessibilidade.'),
+-- Tema 103 (Enem 2018)
+(206, 'Tecnologia', 'Escândalo Cambridge Analytica (2018) — dados de cerca de 87 milhões de usuários do Facebook foram coletados sem autorização e usados para direcionar propaganda política personalizada, inclusive na eleição presidencial norte-americana de 2016.'),
+(207, 'Legislação', 'Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018) — estabelece que o tratamento de dados exige base legal, como o consentimento livre e informado, e garante ao titular os direitos de acesso, correção e eliminação de seus dados.'),
+-- Tema 104 (Enem 2019)
+(208, 'Pesquisa', 'Observatório Brasileiro do Cinema e do Audiovisual (Ancine) — menos de 10% dos municípios brasileiros possuem ao menos uma sala de cinema, e as salas se concentram nas capitais e em shopping centers.'),
+(209, 'Legislação', 'Art. 215 da Constituição Federal e Lei da Cota de Tela (Lei nº 14.814/2024) — o Estado deve garantir o pleno exercício dos direitos culturais, e a cota de tela obriga os cinemas a exibir uma parcela mínima de filmes brasileiros.'),
+-- Tema 105 (Enem 2020)
+(210, 'Sociologia', 'Erving Goffman, em "Estigma: notas sobre a manipulação da identidade deteriorada" (1963) — explica como atributos socialmente desvalorizados reduzem o indivíduo a uma marca, levando-o à exclusão e ao isolamento.'),
+(211, 'Saúde Coletiva', 'Organização Mundial da Saúde (relatório de 2017) — aponta o Brasil como o país com a maior prevalência de transtornos de ansiedade do mundo, atingindo cerca de 9,3% da população.'),
+-- Tema 106 (Enem 2021)
+(212, 'Legislação', 'Lei nº 9.534/1997 e Lei de Registros Públicos (Lei nº 6.015/1973) — garantem a gratuidade do registro civil de nascimento e da primeira certidão para todos os brasileiros.'),
+(213, 'Pesquisa', 'IBGE, Estatísticas do Registro Civil — estima-se que cerca de 3 milhões de brasileiros não possuam certidão de nascimento, e o sub-registro é maior na Região Norte e entre as populações indígenas.'),
+-- Tema 107 (Enem 2022)
+(214, 'Legislação', 'Convenção nº 169 da OIT e Decreto nº 6.040/2007 — asseguram aos povos indígenas e tribais o direito à consulta prévia, livre e informada e instituem a Política Nacional de Desenvolvimento Sustentável dos Povos e Comunidades Tradicionais.'),
+(215, 'Literatura', 'Ailton Krenak, em "Ideias para adiar o fim do mundo" (2019) — critica a ideia de uma humanidade separada da natureza e defende os modos de vida dos povos originários como alternativa ao modelo predatório.'),
+-- Tema 108 (Enem 2023)
+(216, 'Pesquisa', 'PNAD Contínua do IBGE (2022) — as mulheres dedicam, em média, 21,3 horas semanais aos afazeres domésticos e ao cuidado de pessoas, quase o dobro das 11,7 horas dedicadas pelos homens.'),
+(217, 'Economia Feminista', 'Silvia Federici, em "O Ponto Zero da Revolução" (2012) — argumenta que o trabalho doméstico não remunerado sustenta a economia capitalista ao reproduzir diariamente a força de trabalho: "aquilo que eles chamam de amor, nós chamamos de trabalho não pago".'),
+-- Tema 109 (Enem 2024)
+(218, 'Legislação', 'Lei nº 10.639/2003 — tornou obrigatório o ensino de História e Cultura Afro-Brasileira e Africana nas escolas, mas pesquisa do Geledés e do Instituto Alana (2023) mostrou que a maioria das secretarias municipais de educação realiza poucas ou nenhuma ação para cumpri-la.'),
+(219, 'Sociologia', 'Lélia Gonzalez e o conceito de "amefricanidade" (1988) — a intelectual destaca a influência africana na formação cultural e linguística do Brasil, chamando o português falado aqui de "pretuguês".'),
+-- Tema 110 (Enem 2025)
+(220, 'Pesquisa', 'Censo Demográfico do IBGE (2022) — a população com 60 anos ou mais chegou a cerca de 32 milhões de pessoas, mais de 15% do total, e o índice de envelhecimento quase dobrou em relação a 2010.'),
+(221, 'Legislação', 'Estatuto da Pessoa Idosa (Lei nº 10.741/2003) — assegura às pessoas com 60 anos ou mais prioridade no atendimento, proteção contra discriminação, violência e abandono e acesso à saúde, ao transporte e ao lazer.');
+
+-- 16. RELACIONAMENTO TEMA <-> ARGUMENTO (Temas 85 a 110)
+INSERT INTO tema_argumento (tema_id, argumento_id) VALUES
+(85, 169), (85, 170),
+(86, 171), (86, 172),
+(87, 173), (87, 174),
+(88, 175), (88, 176),
+(89, 177), (89, 178),
+(90, 179), (90, 180),
+(91, 181), (91, 182),
+(92, 183), (92, 184),
+(93, 185), (93, 186),
+(94, 187), (94, 188),
+(95, 189), (95, 190),
+(96, 191), (96, 192),
+(97, 193), (97, 194),
+(98, 195), (98, 196),
+(99, 197), (99, 198),
+(100, 199), (100, 200),
+(101, 201), (101, 202),
+(102, 203), (102, 204),
+(103, 205), (103, 206),
+(104, 207), (104, 208),
+(105, 209), (105, 210),
+(106, 211), (106, 212),
+(107, 213), (107, 214),
+(108, 215), (108, 216),
+(109, 217), (109, 218),
+(110, 219), (110, 220);
+
+-- 17. RELACIONAMENTO ARGUMENTO <-> REPERTÓRIO (Argumentos 169 a 220 <-> Repertórios 170 a 221)
+INSERT INTO argumento_repertorio (argumento_id, repertorio_id) VALUES
+(169, 170), (170, 171),
+(171, 172), (172, 173),
+(173, 174), (174, 175),
+(175, 176), (176, 177),
+(177, 178), (178, 179),
+(179, 180), (180, 181),
+(181, 182), (182, 183),
+(183, 184), (184, 185),
+(185, 186), (186, 187),
+(187, 188), (188, 189),
+(189, 190), (190, 191),
+(191, 192), (192, 193),
+(193, 194), (194, 195),
+(195, 196), (196, 197),
+(197, 198), (198, 199),
+(199, 200), (200, 201),
+(201, 202), (202, 203),
+(203, 204), (204, 205),
+(205, 206), (206, 207),
+(207, 208), (208, 209),
+(209, 210), (210, 211),
+(211, 212), (212, 213),
+(213, 214), (214, 215),
+(215, 216), (216, 217),
+(217, 218), (218, 219),
+(219, 220), (220, 221);
+
+SELECT setval('temas_id_seq', (SELECT MAX(id) FROM temas));
+SELECT setval('argumentos_id_seq', (SELECT MAX(id) FROM argumentos));
+SELECT setval('repertorios_id_seq', (SELECT MAX(id) FROM repertorios));
