@@ -104,8 +104,19 @@ let timeoutId = null;
 const COPY_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 const CHECK_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
 
-// Ícones SVG para o menu lateral de Eixos
-function obterIconeEixo(nome = '') {
+// Ícones SVG para os Eixos (menu lateral e cards de temas)
+function obterIconeEixo(eixoOuNome = '') {
+  let nome = '';
+  if (typeof eixoOuNome === 'string') {
+    nome = eixoOuNome;
+  } else if (eixoOuNome && typeof eixoOuNome === 'object') {
+    nome = eixoOuNome.eixo || eixoOuNome.eixo_sugerido || eixoOuNome.nome || '';
+    if (!nome && eixoOuNome.eixo_id && Array.isArray(todosEixos)) {
+      const achado = todosEixos.find(e => e.id === Number(eixoOuNome.eixo_id));
+      if (achado) nome = achado.nome;
+    }
+  }
+
   const n = normalizarTipo(nome);
   if (n.includes('educacao')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
@@ -113,22 +124,22 @@ function obterIconeEixo(nome = '') {
   if (n.includes('cidadania') || n.includes('direito')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M3 10h18"/><polygon points="12 3 20 7 4 7"/><path d="M5 10v11M9 10v11M15 10v11M19 10v11"/></svg>`;
   }
-  if (n.includes('tecnologia') || n.includes('comunicacao')) {
+  if (n.includes('tecnologia') || n.includes('comunicacao') || n.includes('digital') || n.includes('ciencia')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
   }
-  if (n.includes('ambiente') || n.includes('sustentabilidade')) {
+  if (n.includes('ambiente') || n.includes('sustentabilidade') || n.includes('clima') || n.includes('territorio')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
   }
-  if (n.includes('saude')) {
+  if (n.includes('saude') || n.includes('bioetica')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
   }
-  if (n.includes('cultura') || n.includes('identidade')) {
+  if (n.includes('cultura') || n.includes('identidade') || n.includes('memoria')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
   }
-  if (n.includes('trabalho') || n.includes('economia')) {
+  if (n.includes('trabalho') || n.includes('economia') || n.includes('desigualdade')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
   }
-  if (n.includes('seguranca') || n.includes('violencia')) {
+  if (n.includes('seguranca') || n.includes('violencia') || n.includes('justica') || n.includes('democracia')) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
   }
   if (n.includes('infancia') || n.includes('juventude') || n.includes('familia')) {
@@ -167,14 +178,9 @@ function obterIconeCategoria(categoria = '') {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`;
 }
 
-// Ícone destacado para os cards de Temas ("Em alta")
-function obterIconeCardTema(index = 0) {
-  if (index % 2 === 0) {
-    // Chama ("Em alta" como na imagem de referência)
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
-  }
-  // Documento pautado (segundo card na imagem de referência)
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>`;
+// Ícone para os cards de Temas (equivalente ao seu respectivo eixo temático)
+function obterIconeCardTema(temaOuEixo) {
+  return obterIconeEixo(temaOuEixo);
 }
 
 function normalizarTipo(categoria) {
@@ -409,7 +415,7 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
       <section class="tema-card" id="tema-${tema.id}" data-tema-id="${tema.id}">
         <div class="tema-card-top">
           <div class="tema-icon-box" aria-hidden="true">
-            ${obterIconeCardTema(idx)}
+            ${obterIconeCardTema(tema)}
           </div>
           <div class="tema-head-info">
             <h3>
@@ -515,7 +521,7 @@ function renderizarRecomendacaoTemaLivre(rec) {
     <section class="tema-card">
       <div class="tema-card-top">
         <div class="tema-icon-box" aria-hidden="true">
-          ${obterIconeCardTema(0)}
+          ${obterIconeCardTema(rec.eixo_sugerido || rec)}
         </div>
         <div class="tema-head-info">
           <h3>${rec.tema_pesquisado}</h3>
