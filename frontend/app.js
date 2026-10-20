@@ -481,6 +481,8 @@ function renderizarRecomendacaoTemaLivre(rec) {
   const args = rec.argumentos || [];
   const reps = (rec.repertorios || []).filter(repassaFiltroCategoria);
   const correlatos = rec.temas_correlatos || [];
+  const eixoNome = rec.eixo_sugerido || 'Eixo não identificado';
+  const semRelacao = args.length === 0;
 
   const argsHtml = args.map(arg => `
     <article class="arg" data-copyable>
@@ -512,7 +514,7 @@ function renderizarRecomendacaoTemaLivre(rec) {
     ? `
       <section class="tema-card">
         <div class="section-head">
-          <h2>Temas correlatos no catálogo</h2>
+          <h2>${semRelacao ? 'Temas próximos no catálogo' : 'Temas correlatos no catálogo'}</h2>
         </div>
         <ul class="correlatos-list">
           ${correlatos.map(t => `
@@ -532,7 +534,9 @@ function renderizarRecomendacaoTemaLivre(rec) {
     <div class="feed-header">
       <div class="feed-header-left">
         <h2>Recomendação para “${rec.tema_pesquisado}”</h2>
-        <p>Proposta classificada no eixo <strong>${rec.eixo_sugerido}</strong> com base no repertório da plataforma.</p>
+        <p>${rec.eixo_sugerido
+          ? `Proposta classificada no eixo <strong>${rec.eixo_sugerido}</strong> com base no repertório da plataforma.`
+          : 'Não foi possível classificar esta proposta em um dos eixos da plataforma.'}</p>
       </div>
       <ul class="counts">
         <li><strong>${args.length}</strong> teses recomendadas</li>
@@ -540,6 +544,16 @@ function renderizarRecomendacaoTemaLivre(rec) {
       </ul>
     </div>
 
+    ${semRelacao ? `
+    <div class="empty-state">
+      <p>Ainda não temos teses diretamente ligadas a este tema no catálogo.</p>
+      <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+        ${correlatos.length > 0
+          ? 'Confira abaixo os temas mais próximos, que podem servir de ponto de partida para a sua argumentação.'
+          : 'Tente descrever o tema com outras palavras ou navegue pelos eixos temáticos no menu lateral.'}
+      </p>
+    </div>
+    ` : `
     <section class="tema-card">
       <div class="tema-card-top">
         <div class="tema-icon-box" aria-hidden="true">
@@ -547,7 +561,7 @@ function renderizarRecomendacaoTemaLivre(rec) {
         </div>
         <div class="tema-head-info">
           <h3>${rec.tema_pesquisado}</h3>
-          <span class="badge-pill">${rec.eixo_sugerido}</span>
+          <span class="badge-pill">${eixoNome}</span>
         </div>
       </div>
       <div class="cols">
@@ -565,6 +579,7 @@ function renderizarRecomendacaoTemaLivre(rec) {
         </div>
       </div>
     </section>
+    `}
 
     ${correlatosHtml}
   `;
@@ -663,7 +678,7 @@ function renderizarSugestoes(temas, termo, rec) {
     liCustom.innerHTML = `
       <a href="#recomendar" class="suggest-custom">
         <span>Gerar teses e repertórios para: <strong>“${termo}”</strong></span>
-        <span class="meta">${rec.eixo_sugerido}</span>
+        <span class="meta">${rec.eixo_sugerido || 'Eixo não identificado'}</span>
       </a>
     `;
     liCustom.querySelector('a').addEventListener('click', (e) => {

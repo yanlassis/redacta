@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
+const { construirIndice, recomendar, ranquearPorSimilaridade } = require('./recomendacao');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,161 +23,37 @@ pool.connect((err, client, release) => {
 });
 
 // ============================================================================
-// MOTOR DE AFINIDADE E ANÁLISE DE TEMAS LIVRES (Baseado 100% no Banco de Dados)
+// MOTOR DE RECOMENDAÇÃO (ver recomendacao.js) + cache da base em memória
 // ============================================================================
 
-const STOPWORDS = new Set([
-  'a', 'as', 'o', 'os', 'um', 'uma', 'uns', 'umas', 'de', 'do', 'da', 'dos', 'das',
-  'em', 'no', 'na', 'nos', 'nas', 'por', 'pelo', 'pela', 'pelos', 'pelas', 'para',
-  'com', 'sem', 'sob', 'sobre', 'entre', 'ate', 'após', 'apos', 'ante', 'contra',
-  'e', 'ou', 'mas', 'nem', 'que', 'se', 'como', 'quando', 'onde', 'quem', 'qual',
-  'quais', 'cujo', 'cuja', 'cujos', 'cujas', 'seu', 'sua', 'seus', 'suas', 'meu',
-  'minha', 'este', 'esta', 'estes', 'estas', 'esse', 'essa', 'esses', 'essas',
-  'aquele', 'aquela', 'isto', 'isso', 'aquilo', 'ele', 'ela', 'eles', 'elas',
-  'ser', 'estar', 'ter', 'haver', 'fazer', 'ir', 'vir', 'poder', 'dever', 'foi',
-  'sao', 'era', 'seria', 'tem', 'mais', 'menos', 'muito', 'muita', 'muitos',
-  'muitas', 'pouco', 'pouca', 'todo', 'toda', 'todos', 'todas', 'outro', 'outra',
-  'outros', 'outras', 'mesmo', 'mesma', 'ja', 'ainda', 'tambem', 'so', 'nao', 'sim',
-  'brasil', 'brasileiro', 'brasileira', 'brasileiros', 'brasileiras', 'pais',
-  'nacional', 'contemporaneo', 'contemporanea', 'seculo', 'xxi', 'atual', 'atuais',
-  'desafio', 'desafios', 'caminho', 'caminhos', 'combate', 'combater', 'enfrentamento',
-  'enfrentar', 'impacto', 'impactos', 'efeito', 'efeitos', 'consequencia', 'consequencias',
-  'importancia', 'papel', 'questao', 'problema', 'problemas', 'perspectiva', 'perspectivas',
-  'entrave', 'entraves', 'obstaculo', 'obstaculos', 'avanco', 'avancos', 'aumento',
-  'crescimento', 'persistencia', 'valorizacao', 'promocao', 'garantia', 'acesso',
-  'meio', 'meios', 'forma', 'formas', 'contexto', 'cenario', 'sociedade'
-]);
+const TTL_INDICE_MS = 10 * 60 * 1000;
+let cacheIndice = null;
 
-// Mapa de campos semânticos por ID de Eixo do banco para capturar sinônimos do universo do tema
-const MAPA_SEMANTICO_EIXOS = {
-  1: [ // Saúde Pública e Bioética
-    'saude', 'doenca', 'doencas', 'epidemia', 'epidemias', 'pandemia', 'vacina', 'vacinacao',
-    'imunizacao', 'hospital', 'hospitais', 'sus', 'medico', 'medica', 'medicos', 'medicina',
-    'mental', 'mentais', 'psiquiatria', 'psicologia', 'depressao', 'ansiedade', 'suicidio',
-    'manicomio', 'obstetrica', 'parto', 'gestante', 'maternidade', 'nutricao', 'obesidade',
-    'saneamento', 'esgoto', 'higienizacao', 'enfermagem', 'paciente', 'pacientes', 'tratamento',
-    'terapia', 'farmaco', 'medicamento', 'medicamentos', 'remedio', 'bioetica', 'vida'
-  ],
-  2: [ // Tecnologia, Ciência e Sociedade Digital
-    'tecnologia', 'tecnologico', 'digital', 'digitais', 'internet', 'rede', 'redes', 'sociais',
-    'algoritmo', 'algoritmos', 'algoritmica', 'inteligencia', 'artificial', 'ia', 'dados',
-    'privacidade', 'vigilancia', 'cibernetico', 'cibernetica', 'virtual', 'virtuais', 'online',
-    'aposta', 'apostas', 'bets', 'jogos', 'azar', 'vicio', 'tela', 'telas', 'smartphone',
-    'celular', 'computador', 'automacao', 'robos', 'desinformacao', 'fake', 'news', 'deepfake',
-    'ciencia', 'cientifico', 'plataforma', 'plataformas', 'big', 'tech', 'techs', 'ciberespaco'
-  ],
-  3: [ // Educação e Formação Cidadã
-    'educacao', 'educacional', 'escola', 'escolas', 'escolar', 'ensino', 'aprendizagem',
-    'aluno', 'alunos', 'estudante', 'estudantes', 'professor', 'professores', 'docente',
-    'docentes', 'magisterio', 'pedagogia', 'pedagogico', 'aula', 'aulas', 'curriculo',
-    'universidade', 'faculdade', 'alfabetizacao', 'letramento', 'evasao', 'abandono',
-    'creche', 'infantil', 'fundamental', 'medio', 'neurodivergente', 'neurodivergentes',
-    'autismo', 'autista', 'tdah', 'inclusao', 'inclusiva', 'didatico', 'formacao', 'leitura'
-  ],
-  4: [ // Meio Ambiente, Clima e Território
-    'ambiente', 'ambiental', 'ambientais', 'meio', 'natureza', 'ecologia', 'ecologico',
-    'clima', 'climatico', 'climaticos', 'climatica', 'aquecimento', 'global', 'efeito', 'estufa',
-    'amazonia', 'floresta', 'florestas', 'bioma', 'biomas', 'pantanal', 'cerrado', 'caatinga',
-    'mata', 'atlantica', 'queimada', 'queimadas', 'incendio', 'incendios', 'fogo', 'desmatamento',
-    'desflorestamento', 'garimpo', 'mineracao', 'mercurio', 'poluicao', 'plastico', 'lixo',
-    'residuo', 'residuos', 'reciclagem', 'agua', 'hidrica', 'hidrico', 'seca', 'estiagem',
-    'enchente', 'enchentes', 'inundacao', 'desastre', 'desastres', 'sustentavel', 'sustentabilidade',
-    'energia', 'renovavel', 'transicao', 'energetica', 'fauna', 'flora', 'biodiversidade',
-    'indigena', 'indigenas', 'originarios', 'terra', 'terras', 'demarcacao', 'agrotoxico', 'rios'
-  ],
-  5: [ // Cidadania, Direitos Humanos e Minorias
-    'cidadania', 'cidadao', 'direito', 'direitos', 'humanos', 'minoria', 'minorias', 'mulher',
-    'mulheres', 'feminino', 'feminina', 'genero', 'machismo', 'patriarcado', 'cuidado',
-    'materno', 'idoso', 'idosos', 'velhice', 'envelhecimento', 'etarismo', 'terceira', 'idade',
-    'rua', 'morador', 'moradores', 'arquitetura', 'hostil', 'invisibilidade', 'registro',
-    'civil', 'documento', 'certidao', 'deficiencia', 'pcd', 'acessibilidade', 'capacitismo',
-    'racismo', 'racial', 'negro', 'negra', 'negros', 'negras', 'preto', 'lgbt', 'lgbtqia',
-    'homofobia', 'transfobia', ' intolerancia', 'dignidade', 'vulnerabilidade', 'exclusao'
-  ],
-  6: [ // Cultura, Memória e Identidade Nacional
-    'cultura', 'cultural', 'culturais', 'arte', 'artistico', 'artistica', 'patrimonio',
-    'historico', 'memoria', 'museu', 'museus', 'acervo', 'monumento', 'identidade',
-    'lingua', 'linguagem', 'linguistico', 'sotaque', 'gramatica', 'idioma', 'falar',
-    'quilombola', 'quilombolas', 'quilombo', 'ribeirinho', 'ribeirinhas', 'tradicional',
-    'tradicionais', 'ancestral', 'ancestralidade', 'folclore', 'cinema', 'teatro', 'musica',
-    'literatura', 'livro', 'livros', 'biblioteca', 'iphan', 'imaterial', 'material', 'colonial'
-  ],
-  7: [ // Trabalho, Economia e Desigualdade
-    'trabalho', 'trabalhador', 'trabalhadores', 'laboral', 'emprego', 'desemprego', 'renda',
-    'salario', 'economia', 'economico', 'economica', 'desigualdade', 'pobreza', 'miseria',
-    'fome', 'alimentar', 'alimento', 'alimentos', 'inseguranca', 'nutricional', 'agronegocio',
-    'agricultura', 'familiar', 'latifundio', 'campo', 'rural', 'escravo', 'escravidao',
-    'analogo', 'servidao', 'precarizacao', 'uberizacao', 'aplicativo', 'aplicativos',
-    'entregador', 'entregadores', 'motorista', 'informal', 'informalidade', 'previdencia',
-    'aposentadoria', 'clt', 'terceirizacao', 'exploracao', 'consumo', 'endividamento', 'inflacao'
-  ],
-  8: [ // Segurança Pública, Justiça e Democracia
-    'seguranca', 'publica', 'violencia', 'crime', 'criminalidade', 'policia', 'policial',
-    'policiais', 'letalidade', 'camera', 'cameras', 'corporais', 'farda', 'armas',
-    'prisao', 'prisoes', 'presidio', 'presidios', 'penitenciario', 'carcerario', 'encarceramento',
-    'detento', 'detentos', 'preso', 'presos', 'ressocializacao', 'reincidencia', 'penal',
-    'justica', 'judiciario', 'lei', 'leis', 'impunidade', 'democracia', 'democratico',
-    'politica', 'politico', 'parlamento', 'eleicao', 'eleicoes', 'voto', 'representatividade',
-    'corrupcao', 'estado', 'direito', 'constitucional', 'stf', 'direitos', 'milicia', 'faccao',
-    'desaparecido', 'desaparecidos', 'jornalismo', 'imprensa', 'restaurativa'
-  ],
-  9: [ // Infância, Juventude e Relações Familiares
-    'infancia', 'infantil', 'crianca', 'criancas', 'adolescente', 'adolescentes', 'adolescencia',
-    'juventude', 'jovem', 'jovens', 'familia', 'familiar', 'familiares', 'paterno', 'paternidade',
-    'pai', 'mae', 'maes', 'solo', 'maternidade', 'gravidez', 'precoce', 'orfandade', 'orfao',
-    'orfaos', 'adocao', 'abrigo', 'acolhimento', 'parental', 'isolamento', 'hikikomori', 'brincar',
-    'eca', 'estatuto', 'menor', 'menores'
-  ],
-  10: [ // Mobilidade Urbana, Habitação e Direito à Cidade
-    'mobilidade', 'urbana', 'urbano', 'urbanas', 'urbanos', 'cidade', 'cidades', 'metropole',
-    'metropoles', 'transporte', 'onibus', 'metro', 'tarifa', 'zero', 'transito', 'motociclista',
-    'motociclistas', 'moto', 'acidente', 'sinistro', 'habitacao', 'habitacional', 'moradia',
-    'teto', 'aluguel', 'gentrificacao', 'imobiliaria', 'especulacao', 'imovel', 'imoveis',
-    'calor', 'arborizacao', 'arvore', 'arvores', 'iluminacao', 'calcada', 'espaco', 'publico'
-  ]
-};
-
-function normalizarTexto(str) {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+// Carrega eixos, temas, teses, repertórios e relações uma vez e reaproveita por alguns minutos
+async function obterIndice() {
+  if (cacheIndice && Date.now() - cacheIndice.criadoEm < TTL_INDICE_MS) {
+    return cacheIndice.promessa;
+  }
+  const promessa = Promise.all([
+    pool.query('SELECT id, nome FROM eixos ORDER BY id ASC'),
+    pool.query('SELECT id, titulo, eixo_id FROM temas ORDER BY id ASC'),
+    pool.query('SELECT id, descricao FROM argumentos ORDER BY id ASC'),
+    pool.query('SELECT id, categoria, conteudo FROM repertorios ORDER BY id ASC'),
+    pool.query('SELECT tema_id, argumento_id FROM tema_argumento'),
+    pool.query('SELECT argumento_id, repertorio_id FROM argumento_repertorio')
+  ]).then(([eixos, temas, argumentos, repertorios, temaArgumento, argumentoRepertorio]) => construirIndice({
+    eixos: eixos.rows.map(e => ({ ...e, nome: e.nome.trim() })),
+    temas: temas.rows,
+    argumentos: argumentos.rows,
+    repertorios: repertorios.rows,
+    temaArgumento: temaArgumento.rows,
+    argumentoRepertorio: argumentoRepertorio.rows
+  }));
+  cacheIndice = { criadoEm: Date.now(), promessa };
+  promessa.catch(() => { cacheIndice = null; });
+  return promessa;
 }
 
-function extrairTokens(texto) {
-  const norm = normalizarTexto(texto);
-  if (!norm) return [];
-  return norm.split(' ').filter(w => w.length > 2 && !STOPWORDS.has(w));
-}
-
-function extrairRadicais(tokens) {
-  return tokens.map(t => (t.length >= 6 ? t.slice(0, 5) : t));
-}
-
-// Calcula pontuação de afinidade entre os tokens do usuário e um texto do banco
-function pontuarTexto(textoAlvo, tokensUsuario, radicaisUsuario) {
-  const normAlvo = normalizarTexto(textoAlvo);
-  const palavrasAlvo = normAlvo.split(' ');
-  let pontos = 0;
-  const termosEncontrados = new Set();
-
-  tokensUsuario.forEach((token, idx) => {
-    const radical = radicaisUsuario[idx];
-    if (palavrasAlvo.includes(token)) {
-      pontos += 12; // Match exato de palavra
-      termosEncontrados.add(token);
-    } else if (radical.length >= 4 && palavrasAlvo.some(p => p.startsWith(radical) || radical.startsWith(p.slice(0, 5)))) {
-      pontos += 7; // Match de radical morfológico
-      termosEncontrados.add(token);
-    }
-  });
-
-  return { pontos, termosEncontrados: Array.from(termosEncontrados) };
-}
 
 // ============================================================================
 // ROTAS DA API
@@ -190,124 +67,8 @@ app.get('/api/temas/recomendar', async (req, res) => {
       return res.status(400).json({ erro: 'Informe um tema na query ?q=' });
     }
 
-    const temaUsuario = q.trim();
-    const tokensUsuario = extrairTokens(temaUsuario);
-    const radicaisUsuario = extrairRadicais(tokensUsuario);
-
-    const [eixosRes, temasRes, argsRes, repsRes] = await Promise.all([
-      pool.query('SELECT id, nome FROM eixos ORDER BY id ASC'),
-      pool.query(`
-        SELECT t.id, t.titulo, t.eixo_id, e.nome AS eixo
-        FROM temas t
-        LEFT JOIN eixos e ON t.eixo_id = e.id
-        ORDER BY t.id ASC
-      `),
-      pool.query(`
-        SELECT a.id, a.descricao, t.id AS tema_id, t.titulo AS tema_titulo, t.eixo_id, e.nome AS eixo_nome
-        FROM argumentos a
-        JOIN tema_argumento ta ON ta.argumento_id = a.id
-        JOIN temas t ON t.id = ta.tema_id
-        LEFT JOIN eixos e ON e.id = t.eixo_id
-      `),
-      pool.query(`
-        SELECT DISTINCT r.id, r.categoria, r.conteudo, t.id AS tema_id, t.titulo AS tema_titulo, t.eixo_id, e.nome AS eixo_nome
-        FROM repertorios r
-        JOIN argumento_repertorio ar ON ar.repertorio_id = r.id
-        JOIN tema_argumento ta ON ta.argumento_id = ar.argumento_id
-        JOIN temas t ON t.id = ta.tema_id
-        LEFT JOIN eixos e ON e.id = t.eixo_id
-      `)
-    ]);
-
-    const pontuacaoEixos = {};
-    eixosRes.rows.forEach(eixo => {
-      const { pontos: ptsNome } = pontuarTexto(eixo.nome, tokensUsuario, radicaisUsuario);
-      const palavrasCampo = (MAPA_SEMANTICO_EIXOS[eixo.id] || []).join(' ');
-      const { pontos: ptsCampo } = pontuarTexto(palavrasCampo, tokensUsuario, radicaisUsuario);
-      pontuacaoEixos[eixo.id] = ptsNome * 2 + ptsCampo;
-    });
-
-    const temasPontuados = temasRes.rows.map(t => {
-      const { pontos: ptsTitulo, termosEncontrados } = pontuarTexto(t.titulo, tokensUsuario, radicaisUsuario);
-      const bonusEixo = (pontuacaoEixos[t.eixo_id] || 0) * 0.6;
-      return {
-        ...t,
-        score: ptsTitulo * 2.5 + bonusEixo,
-        termosEncontrados
-      };
-    }).sort((a, b) => b.score - a.score);
-
-    const melhorTema = temasPontuados[0];
-    const eixoPrincipalId = melhorTema && melhorTema.score > 0 ? melhorTema.eixo_id : 1;
-    const eixoPrincipalNome = (eixosRes.rows.find(e => e.id === eixoPrincipalId) || {}).nome || 'Geral';
-
-    const matchExato = temasRes.rows.find(
-      t => normalizarTexto(t.titulo) === normalizarTexto(temaUsuario)
-    );
-
-    const argumentosUnicos = new Map();
-    argsRes.rows.forEach(arg => {
-      const { pontos: ptsDesc } = pontuarTexto(arg.descricao, tokensUsuario, radicaisUsuario);
-      const { pontos: ptsTema } = pontuarTexto(arg.tema_titulo, tokensUsuario, radicaisUsuario);
-      const bonusEixo = arg.eixo_id === eixoPrincipalId ? 15 : (pontuacaoEixos[arg.eixo_id] || 0) * 0.4;
-      const scoreTotal = ptsDesc * 2 + ptsTema * 1.5 + bonusEixo;
-
-      if (!argumentosUnicos.has(arg.id) || argumentosUnicos.get(arg.id).score < scoreTotal) {
-        argumentosUnicos.set(arg.id, {
-          id: arg.id,
-          descricao: arg.descricao,
-          tema_origem_id: arg.tema_id,
-          tema_origem: arg.tema_titulo,
-          eixo: arg.eixo_nome,
-          score: scoreTotal
-        });
-      }
-    });
-
-    const argumentosRecomendados = Array.from(argumentosUnicos.values())
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6);
-
-    const repertoriosUnicos = new Map();
-    repsRes.rows.forEach(rep => {
-      const { pontos: ptsConteudo } = pontuarTexto(rep.conteudo, tokensUsuario, radicaisUsuario);
-      const { pontos: ptsTema } = pontuarTexto(rep.tema_titulo, tokensUsuario, radicaisUsuario);
-      const bonusEixo = rep.eixo_id === eixoPrincipalId ? 15 : (pontuacaoEixos[rep.eixo_id] || 0) * 0.4;
-      const scoreTotal = ptsConteudo * 2 + ptsTema * 1.5 + bonusEixo;
-
-      if (!repertoriosUnicos.has(rep.id) || repertoriosUnicos.get(rep.id).score < scoreTotal) {
-        repertoriosUnicos.set(rep.id, {
-          id: rep.id,
-          categoria: rep.categoria,
-          conteudo: rep.conteudo,
-          tema_origem_id: rep.tema_id,
-          tema_origem: rep.tema_titulo,
-          eixo: rep.eixo_nome,
-          score: scoreTotal
-        });
-      }
-    });
-
-    const repertoriosRecomendados = Array.from(repertoriosUnicos.values())
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6);
-
-    const temasCorrelatos = temasPontuados
-      .filter(t => t.score > 0 || t.eixo_id === eixoPrincipalId)
-      .slice(0, 4)
-      .map(({ id, titulo, eixo_id, eixo }) => ({ id, titulo, eixo_id, eixo }));
-
-    res.json({
-      tema_pesquisado: temaUsuario,
-      existe_exato: Boolean(matchExato),
-      tema_exato_id: matchExato ? matchExato.id : null,
-      eixo_id: eixoPrincipalId,
-      eixo_sugerido: eixoPrincipalNome,
-      palavras_chave_identificadas: tokensUsuario,
-      argumentos: argumentosRecomendados,
-      repertorios: repertoriosRecomendados,
-      temas_correlatos: temasCorrelatos
-    });
+    const indice = await obterIndice();
+    res.json(recomendar(q, indice));
   } catch (error) {
     console.error('Erro na recomendação inteligente:', error);
     res.status(500).json({ erro: 'Erro ao processar recomendação para o tema' });
@@ -392,9 +153,6 @@ app.get('/api/temas', async (req, res) => {
     ]);
 
     const temasCompletos = temasRes.rows.map(tema => {
-      const tokensTema = extrairTokens(tema.titulo);
-      const radicaisTema = extrairRadicais(tokensTema);
-
       const argsDiretos = argsRes.rows
         .filter(a => a.tema_id === tema.id)
         .map(({ id, descricao }) => ({ id, descricao, direto: true }));
@@ -402,15 +160,11 @@ app.get('/api/temas', async (req, res) => {
       const idsArgsDiretos = new Set(argsDiretos.map(a => a.id));
 
       // Busca +4 teses relacionadas do mesmo eixo ordenadas por afinidade vocabular com o tema
-      const argsRelacionados = argsRes.rows
-        .filter(a => a.eixo_id === tema.eixo_id && !idsArgsDiretos.has(a.id))
-        .map(a => {
-          const { pontos } = pontuarTexto(`${a.descricao} ${a.tema_origem}`, tokensTema, radicaisTema);
-          return { id: a.id, descricao: a.descricao, tema_origem: a.tema_origem, direto: false, score: pontos };
-        })
-        .sort((a, b) => b.score - a.score || a.id - b.id)
+      const argsCandidatos = argsRes.rows
+        .filter(a => a.eixo_id === tema.eixo_id && !idsArgsDiretos.has(a.id));
+      const argsRelacionados = ranquearPorSimilaridade(tema.titulo, argsCandidatos, a => [[a.descricao, 1], [a.tema_origem, 1.5]])
         .slice(0, 4)
-        .map(({ id, descricao, tema_origem, direto }) => ({ id, descricao, tema_origem, direto }));
+        .map(({ item: { id, descricao, tema_origem } }) => ({ id, descricao, tema_origem, direto: false }));
 
       const repsDiretos = repsRes.rows
         .filter(r => r.tema_id === tema.id)
@@ -419,15 +173,11 @@ app.get('/api/temas', async (req, res) => {
       const idsRepsDiretos = new Set(repsDiretos.map(r => r.id));
 
       // Busca +4 repertórios relacionados do mesmo eixo ordenados por afinidade vocabular
-      const repsRelacionados = repsRes.rows
-        .filter(r => r.eixo_id === tema.eixo_id && !idsRepsDiretos.has(r.id))
-        .map(r => {
-          const { pontos } = pontuarTexto(`${r.conteudo} ${r.tema_origem}`, tokensTema, radicaisTema);
-          return { id: r.id, categoria: r.categoria, conteudo: r.conteudo, tema_origem: r.tema_origem, direto: false, score: pontos };
-        })
-        .sort((a, b) => b.score - a.score || a.id - b.id)
+      const repsCandidatos = repsRes.rows
+        .filter(r => r.eixo_id === tema.eixo_id && !idsRepsDiretos.has(r.id));
+      const repsRelacionados = ranquearPorSimilaridade(tema.titulo, repsCandidatos, r => [[r.conteudo, 1], [r.tema_origem, 1.5]])
         .slice(0, 4)
-        .map(({ id, categoria, conteudo, tema_origem, direto }) => ({ id, categoria, conteudo, tema_origem, direto }));
+        .map(({ item: { id, categoria, conteudo, tema_origem } }) => ({ id, categoria, conteudo, tema_origem, direto: false }));
 
       return {
         ...tema,
@@ -464,8 +214,6 @@ app.get('/api/temas/:id', async (req, res) => {
     }
 
     const tema = temaRes.rows[0];
-    const tokensTema = extrairTokens(tema.titulo);
-    const radicaisTema = extrairRadicais(tokensTema);
 
     const [argsDiretosRes, argsEixoRes, repsDiretosRes, repsEixoRes] = await Promise.all([
       pool.query(
@@ -507,24 +255,22 @@ app.get('/api/temas/:id', async (req, res) => {
     ]);
 
     const idsArgsDiretos = new Set(argsDiretosRes.rows.map(a => a.id));
-    const argsRelacionados = argsEixoRes.rows
-      .filter(a => !idsArgsDiretos.has(a.id))
-      .map(a => {
-        const { pontos } = pontuarTexto(`${a.descricao} ${a.tema_origem}`, tokensTema, radicaisTema);
-        return { ...a, direto: false, score: pontos };
-      })
-      .sort((a, b) => b.score - a.score || a.id - b.id)
+    const argsRelacionados = ranquearPorSimilaridade(
+      tema.titulo,
+      argsEixoRes.rows.filter(a => !idsArgsDiretos.has(a.id)).map(a => ({ ...a, direto: false })),
+      a => [[a.descricao, 1], [a.tema_origem, 1.5]]
+    )
+      .map(({ item }) => item)
       .slice(0, 6)
       .map(({ id, descricao, tema_origem, direto }) => ({ id, descricao, tema_origem, direto }));
 
     const idsRepsDiretos = new Set(repsDiretosRes.rows.map(r => r.id));
-    const repsRelacionados = repsEixoRes.rows
-      .filter(r => !idsRepsDiretos.has(r.id))
-      .map(r => {
-        const { pontos } = pontuarTexto(`${r.conteudo} ${r.tema_origem}`, tokensTema, radicaisTema);
-        return { ...r, direto: false, score: pontos };
-      })
-      .sort((a, b) => b.score - a.score || a.id - b.id)
+    const repsRelacionados = ranquearPorSimilaridade(
+      tema.titulo,
+      repsEixoRes.rows.filter(r => !idsRepsDiretos.has(r.id)).map(r => ({ ...r, direto: false })),
+      r => [[r.conteudo, 1], [r.tema_origem, 1.5]]
+    )
+      .map(({ item }) => item)
       .slice(0, 6)
       .map(({ id, categoria, conteudo, tema_origem, direto }) => ({ id, categoria, conteudo, tema_origem, direto }));
 
