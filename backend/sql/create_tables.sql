@@ -35,3 +35,13 @@ CREATE TABLE IF NOT EXISTS argumento_repertorio (
     repertorio_id INTEGER REFERENCES repertorios(id) ON DELETE CASCADE,
     PRIMARY KEY (argumento_id, repertorio_id)
 );
+
+
+-- Tabela de Favoritos do Usuário
+CREATE TABLE IF NOT EXISTS favoritos (
+    id SERIAL PRIMARY KEY,
+    tema_id INTEGER REFERENCES temas(id) ON DELETE CASCADE,
+    repertorio_id INTEGER REFERENCES repertorios(id) ON DELETE CASCADE,
+    user_identifier VARCHAR(100) DEFAULT 'default_user',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

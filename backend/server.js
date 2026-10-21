@@ -333,6 +333,68 @@ app.get('/api/categorias', async (req, res) => {
   }
 });
 
+// 7. Rota para listar favoritos do usuário
+app.get('/api/favoritos', async (req, res) => {
+  try {
+    const user = req.query.user || 'default_user';
+    try {
+      const resultado = await pool.query(`
+        SELECT f.id as favorito_id, f.tema_id, f.repertorio_id, f.created_at,
+               t.titulo as tema_titulo, e.nome as eixo_nome,
+               r.categoria as rep_categoria, r.conteudo as rep_conteudo
+        FROM favoritos f
+        LEFT JOIN temas t ON t.id = f.tema_id
+        LEFT JOIN eixos e ON e.id = t.eixo_id
+        LEFT JOIN repertorios r ON r.id = f.repertorio_id
+        WHERE f.user_identifier = $1
+        ORDER BY f.created_at DESC
+      `, [user]);
+      res.json(resultado.rows);
+    } catch (dbErr) {
+      // Caso a tabela ainda não tenha sido criada no Supabase
+      res.json([]);
+    }
+  } catch (erro) {
+    console.error('Erro ao buscar favoritos:', erro);
+    res.status(500).json({ erro: 'Falha ao buscar favoritos' });
+  }
+});
+
+// 8. Rota para adicionar favorito
+app.post('/api/favoritos', async (req, res) => {
+  try {
+    const { tema_id, repertorio_id, user = 'default_user' } = req.body;
+    if (!tema_id && !repertorio_id) {
+      return res.status(400).json({ erro: 'Informe tema_id ou repertorio_id' });
+    }
+    const resultado = await pool.query(`
+      INSERT INTO favoritos (tema_id, repertorio_id, user_identifier)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `, [tema_id || null, repertorio_id || null, user]);
+    res.status(201).json(resultado.rows[0]);
+  } catch (erro) {
+    console.error('Erro ao salvar favorito:', erro);
+    res.status(500).json({ erro: 'Falha ao salvar favorito' });
+  }
+});
+
+// 9. Rota para remover favorito
+app.delete('/api/favoritos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resultado = await pool.query(`
+      DELETE FROM favoritos
+      WHERE id = $1 OR tema_id = $1 OR repertorio_id = $1
+      RETURNING *
+    `, [id]);
+    res.json({ mensagem: 'Favorito removido com sucesso', removidos: resultado.rows });
+  } catch (erro) {
+    console.error('Erro ao remover favorito:', erro);
+    res.status(500).json({ erro: 'Falha ao remover favorito' });
+  }
+});
+
 // Inicialização do servidor (apenas se executado diretamente, permitindo uso como Serverless na Vercel)
 if (require.main === module) {
   app.listen(port, () => {
