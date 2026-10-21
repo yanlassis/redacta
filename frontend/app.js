@@ -128,44 +128,26 @@ let timeoutId = null;
 // ============================================================================
 // MÓDULO DE FAVORITOS (REDACTA)
 // ============================================================================
-const DEFAULT_FAVORITOS = [
-  {
-    id: 'fav-1',
-    titulo: 'A tirania da maioria',
-    autor: 'Alexis de Tocqueville',
-    categoria: 'SOCIOLOGIA',
-    icone: 'flame',
-    citacao: 'A maioria possui um poder tão irresistível que é preciso submeter-se a ela ou morrer.',
-    contexto: 'Crítica aos perigos do conformismo social e a opressão de minorias em regimes democráticos.'
-  },
-  {
-    id: 'fav-2',
-    titulo: 'O contrato social',
-    autor: 'Jean-Jacques Rousseau',
-    categoria: 'FILOSOFIA',
-    icone: 'document',
-    citacao: 'O homem nasce livre, e por toda parte encontra-se a ferros.',
-    contexto: 'Fundamento sobre o pacto social, a soberania popular e a responsabilidade do Estado em assegurar o bem-estar coletivo.'
-  },
-  {
-    id: 'fav-3',
-    titulo: '1984',
-    autor: 'George Orwell',
-    categoria: 'LITERATURA',
-    icone: 'document',
-    citacao: 'Guerra é Paz. Liberdade é Escravidão. Ignorância é Força.',
-    contexto: 'Distopia sobre vigilância em massa, controle de dados, manipulação midiática e restrição da liberdade individual.'
-  },
-  {
-    id: 'fav-4',
-    titulo: 'A invisibilidade social e o preconceito',
-    autor: 'Contemporâneo',
-    categoria: 'ATUALIDADES',
-    icone: 'eye',
-    citacao: 'O verdadeiro olhar humano enxerga para além da utilidade econômica do indivíduo.',
-    contexto: 'Análise sobre a indiferença da sociedade perante trabalhadores marginalizados e a desumanização cotidiana.'
+const SAMPLE_FAVORITO_ID = /^fav-[1-4]$/;
+const USER_KEY = 'redacta_user_id';
+
+function escapeHtml(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Identificador anônimo por navegador, usado para guardar os favoritos no backend
+function obterUserId() {
+  try {
+    let id = localStorage.getItem(USER_KEY);
+    if (!id) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : `u-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`);
+      localStorage.setItem(USER_KEY, id);
+    }
+    return id;
+  } catch (e) {
+    return null;
   }
-];
+}
 
 const STORAGE_KEY = 'redacta_favoritos';
 
@@ -179,13 +161,56 @@ class FavoritosManager {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        // Descarta os itens de exemplo que versões anteriores gravavam para todo usuário
+        if (Array.isArray(parsed)) return parsed.filter(item => !SAMPLE_FAVORITO_ID.test(String(item.id)));
       }
     } catch (e) {
       console.warn('Erro ao carregar favoritos do localStorage:', e);
     }
-    this.saveFavoritos(DEFAULT_FAVORITOS);
-    return [...DEFAULT_FAVORITOS];
+    return [];
+  }
+
+  // Favoritos de tema são espelhados no backend; falhas de rede não bloqueiam o uso local
+  syncRemote(item, isAdded) {
+    const match = /^tema-(\d+)$/.exec(String(item.id));
+    const user = obterUserId();
+    if (!match || !user) return;
+    const temaId = Number(match[1]);
+    const req = isAdded
+      ? apiFetch('/favoritos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tema_id: temaId, user }) })
+      : apiFetch(`/favoritos?user=${encodeURIComponent(user)}&tema_id=${temaId}`, { method: 'DELETE' });
+    req.catch(err => console.warn('Não foi possível sincronizar o favorito com o servidor:', err));
+  }
+
+  // Carrega do backend os favoritos de tema e os mescla com os locais
+  async loadRemote() {
+    const user = obterUserId();
+    if (!user) return;
+    try {
+      const res = await apiFetch(`/favoritos?user=${encodeURIComponent(user)}`);
+      if (!res.ok) return;
+      const remotos = (await res.json()).filter(f => f.tema_id);
+      const remotosIds = new Set(remotos.map(f => `tema-${f.tema_id}`));
+      const jaLocais = new Set(this.favoritos.map(i => String(i.id)));
+      const novos = remotos
+        .filter(f => !jaLocais.has(`tema-${f.tema_id}`))
+        .map(f => ({
+          id: `tema-${f.tema_id}`,
+          titulo: f.tema_titulo,
+          autor: f.eixo_nome || 'Tema ENEM',
+          categoria: (f.eixo_nome || 'GERAL').toUpperCase(),
+          icone: 'document',
+          contexto: `Tema de redação do eixo ${f.eixo_nome || 'Geral'}. Contém teses e repertórios catalogados.`
+        }));
+      // Favoritos de tema que só existem localmente (ex.: criados offline) sobem para o servidor
+      const soLocais = this.favoritos.filter(i => /^tema-/.test(String(i.id)) && !remotosIds.has(String(i.id)));
+      soLocais.forEach(i => this.syncRemote(i, true));
+      this.favoritos = [...novos, ...this.favoritos];
+      this.saveFavoritos(this.favoritos);
+      this.refreshViews();
+    } catch (e) {
+      console.warn('Não foi possível carregar favoritos do servidor:', e);
+    }
   }
 
   saveFavoritos(items) {
@@ -237,13 +262,18 @@ class FavoritosManager {
     return item;
   }
 
-  notifyUpdate(isAdded, item) {
+  refreshViews() {
     renderFavoritosWidget();
     updateFavoritosBadges();
     updateAllTemaBookmarkButtons();
     if (favoritosModal && favoritosModal.classList.contains('active')) {
       renderModalFavoritos();
     }
+  }
+
+  notifyUpdate(isAdded, item) {
+    this.refreshViews();
+    this.syncRemote(item, isAdded);
     if (isAdded) {
       showToast(`Adicionado aos favoritos: ${item.titulo}`, 'success');
     } else {
@@ -282,18 +312,18 @@ function renderFavoritosWidget() {
     div.className = 'favorito-item';
     div.dataset.favId = item.id;
 
-    const authorText = item.autor ? `(${item.autor})` : '';
+    const authorText = item.autor ? `(${escapeHtml(item.autor)})` : '';
 
     div.innerHTML = `
       <div class="favorito-item-icon">
         ${getFavoritoIconSvg(item.icone || 'document')}
       </div>
       <div class="favorito-item-content">
-        <h4 class="favorito-item-title" title="${item.titulo}">${item.titulo}</h4>
+        <h4 class="favorito-item-title" title="${escapeHtml(item.titulo)}">${escapeHtml(item.titulo)}</h4>
         ${authorText ? `<span class="favorito-item-author">${authorText}</span>` : ''}
-        <span class="favorito-item-tag">${item.categoria || 'GERAL'}</span>
+        <span class="favorito-item-tag">${escapeHtml(item.categoria || 'GERAL')}</span>
       </div>
-      <button type="button" class="favorito-bookmark-btn" aria-label="Remover dos favoritos" title="Remover dos favoritos" data-remove-id="${item.id}">
+      <button type="button" class="favorito-bookmark-btn" aria-label="Remover dos favoritos" title="Remover dos favoritos" data-remove-id="${escapeHtml(item.id)}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
         </svg>
@@ -415,22 +445,22 @@ function renderModalFavoritos() {
     card.className = 'modal-favorito-card';
     card.id = `modal-card-${item.id}`;
 
-    const authorText = item.autor ? ` • ${item.autor}` : '';
+    const authorText = item.autor ? ` • ${escapeHtml(item.autor)}` : '';
     const textToCopy = item.citacao || item.contexto || item.titulo;
 
     card.innerHTML = `
       <div class="modal-favorito-top">
         <div>
-          <span class="badge-pill" style="margin-bottom: 0.35rem; display: inline-block;">${item.categoria || 'REPERTÓRIO'}</span>
-          <h3 class="modal-favorito-title">${item.titulo}${authorText}</h3>
+          <span class="badge-pill" style="margin-bottom: 0.35rem; display: inline-block;">${escapeHtml(item.categoria || 'REPERTÓRIO')}</span>
+          <h3 class="modal-favorito-title">${escapeHtml(item.titulo)}${authorText}</h3>
         </div>
-        <button type="button" class="remove-modal-favorito-btn" title="Remover de favoritos" data-id="${item.id}">
+        <button type="button" class="remove-modal-favorito-btn" title="Remover de favoritos" data-id="${escapeHtml(item.id)}">
           Remover
         </button>
       </div>
 
-      ${item.citacao ? `<p class="modal-favorito-desc"><em>"${item.citacao}"</em></p>` : ''}
-      ${item.contexto ? `<p class="modal-favorito-desc" style="color: var(--ink-muted); font-size: 0.8rem;">${item.contexto}</p>` : ''}
+      ${item.citacao ? `<p class="modal-favorito-desc"><em>"${escapeHtml(item.citacao)}"</em></p>` : ''}
+      ${item.contexto ? `<p class="modal-favorito-desc" style="color: var(--ink-muted); font-size: 0.8rem;">${escapeHtml(item.contexto)}</p>` : ''}
 
       <div class="modal-favorito-actions">
         <button type="button" class="copy-quote-btn" data-quote="${encodeURIComponent(textToCopy)}">
@@ -1362,6 +1392,7 @@ if (modalSearchInput) {
 // Renderiza o widget inicial de favoritos e atualiza os marcadores
 renderFavoritosWidget();
 updateFavoritosBadges();
+favManager.loadRemote();
 
 // Inicia carregando os dados reais do Supabase
 inicializarLandingPage();

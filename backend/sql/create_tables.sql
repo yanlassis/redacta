@@ -42,6 +42,11 @@ CREATE TABLE IF NOT EXISTS favoritos (
     id SERIAL PRIMARY KEY,
     tema_id INTEGER REFERENCES temas(id) ON DELETE CASCADE,
     repertorio_id INTEGER REFERENCES repertorios(id) ON DELETE CASCADE,
-    user_identifier VARCHAR(100) DEFAULT 'default_user',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    user_identifier VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CHECK ((tema_id IS NULL) <> (repertorio_id IS NULL))
 );
+
+-- Impede favoritos duplicados por usuário (e indexa a busca por usuário)
+CREATE UNIQUE INDEX IF NOT EXISTS favoritos_user_tema_uq ON favoritos (user_identifier, tema_id) WHERE tema_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS favoritos_user_repertorio_uq ON favoritos (user_identifier, repertorio_id) WHERE repertorio_id IS NOT NULL;
