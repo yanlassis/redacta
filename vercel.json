@@ -16,6 +16,13 @@
       "dest": "backend/server.js"
     },
     {
+      "src": "/sw.js",
+      "headers": {
+        "cache-control": "no-cache"
+      },
+      "dest": "frontend/sw.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "frontend/$1"
     }
