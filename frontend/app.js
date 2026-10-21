@@ -1340,3 +1340,10 @@ favManager.loadRemote();
 
 // Inicia carregando os dados reais do Supabase
 inicializarLandingPage();
+
+// PWA: registra o service worker (permite instalar o app e abrir offline o que já foi visitado)
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || isLocalEnv)) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.warn('Falha ao registrar o service worker:', err));
+  });
+}
