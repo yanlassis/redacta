@@ -333,6 +333,104 @@ app.get('/api/categorias', async (req, res) => {
   }
 });
 
+// Favoritos: o usuário é um identificador anônimo gerado por navegador (não há autenticação)
+const USER_ID_REGEX = /^[A-Za-z0-9_-]{8,100}$/;
+
+function obterUsuarioFavoritos(req) {
+  const user = req.query.user || (req.body && req.body.user);
+  return typeof user === 'string' && USER_ID_REGEX.test(user) ? user : null;
+}
+
+function idInteiro(valor) {
+  const n = Number(valor);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+// 7. Rota para listar favoritos do usuário
+app.get('/api/favoritos', async (req, res) => {
+  const user = obterUsuarioFavoritos(req);
+  if (!user) return res.status(400).json({ erro: 'Informe um identificador de usuário válido (user)' });
+  try {
+    const resultado = await pool.query(`
+      SELECT f.id as favorito_id, f.tema_id, f.repertorio_id, f.created_at,
+             t.titulo as tema_titulo, e.nome as eixo_nome,
+             r.categoria as rep_categoria, r.conteudo as rep_conteudo
+      FROM favoritos f
+      LEFT JOIN temas t ON t.id = f.tema_id
+      LEFT JOIN eixos e ON e.id = t.eixo_id
+      LEFT JOIN repertorios r ON r.id = f.repertorio_id
+      WHERE f.user_identifier = $1
+      ORDER BY f.created_at DESC
+    `, [user]);
+    res.json(resultado.rows);
+  } catch (erro) {
+    // 42P01: tabela ainda não criada no banco; qualquer outro erro é falha real
+    if (erro.code === '42P01') return res.json([]);
+    console.error('Erro ao buscar favoritos:', erro);
+    res.status(500).json({ erro: 'Falha ao buscar favoritos' });
+  }
+});
+
+// 8. Rota para adicionar favorito (idempotente: repetir o mesmo favorito não duplica)
+app.post('/api/favoritos', async (req, res) => {
+  const user = obterUsuarioFavoritos(req);
+  if (!user) return res.status(400).json({ erro: 'Informe um identificador de usuário válido (user)' });
+  const temaId = idInteiro(req.body.tema_id);
+  const repertorioId = idInteiro(req.body.repertorio_id);
+  if (!temaId === !repertorioId) {
+    return res.status(400).json({ erro: 'Informe exatamente um entre tema_id e repertorio_id' });
+  }
+  try {
+    const inserido = await pool.query(`
+      INSERT INTO favoritos (tema_id, repertorio_id, user_identifier)
+      VALUES ($1, $2, $3)
+      ON CONFLICT DO NOTHING
+      RETURNING *
+    `, [temaId, repertorioId, user]);
+    if (inserido.rows[0]) return res.status(201).json(inserido.rows[0]);
+    const existente = await pool.query(`
+      SELECT * FROM favoritos
+      WHERE user_identifier = $1 AND tema_id IS NOT DISTINCT FROM $2 AND repertorio_id IS NOT DISTINCT FROM $3
+    `, [user, temaId, repertorioId]);
+    res.status(200).json(existente.rows[0]);
+  } catch (erro) {
+    if (erro.code === '23503') return res.status(404).json({ erro: 'Tema ou repertório não encontrado' });
+    console.error('Erro ao salvar favorito:', erro);
+    res.status(500).json({ erro: 'Falha ao salvar favorito' });
+  }
+});
+
+// 9. Rota para remover favorito: por id do favorito, ou por tema_id/repertorio_id via query. Sempre restrito ao usuário
+async function removerFavoritos(res, user, coluna, valor) {
+  try {
+    const resultado = await pool.query(
+      `DELETE FROM favoritos WHERE user_identifier = $1 AND ${coluna} = $2 RETURNING *`,
+      [user, valor]
+    );
+    res.json({ mensagem: 'Favorito removido com sucesso', removidos: resultado.rows });
+  } catch (erro) {
+    console.error('Erro ao remover favorito:', erro);
+    res.status(500).json({ erro: 'Falha ao remover favorito' });
+  }
+}
+
+app.delete('/api/favoritos/:id', async (req, res) => {
+  const user = obterUsuarioFavoritos(req);
+  const id = idInteiro(req.params.id);
+  if (!user || !id) return res.status(400).json({ erro: 'Parâmetros inválidos' });
+  await removerFavoritos(res, user, 'id', id);
+});
+
+app.delete('/api/favoritos', async (req, res) => {
+  const user = obterUsuarioFavoritos(req);
+  const temaId = idInteiro(req.query.tema_id);
+  const repertorioId = idInteiro(req.query.repertorio_id);
+  if (!user || !temaId === !repertorioId) {
+    return res.status(400).json({ erro: 'Informe user e exatamente um entre tema_id e repertorio_id' });
+  }
+  await removerFavoritos(res, user, temaId ? 'tema_id' : 'repertorio_id', temaId || repertorioId);
+});
+
 // Inicialização do servidor (apenas se executado diretamente, permitindo uso como Serverless na Vercel)
 if (require.main === module) {
   app.listen(port, () => {
