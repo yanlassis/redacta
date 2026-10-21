@@ -65,6 +65,12 @@ flowchart LR
 | `GET` | `/api/temas/:id` | Tema com argumentos e repertórios |
 | `GET` | `/api/temas/busca` | Busca por termo, tema ou palavra-chave |
 | `GET` | `/api/temas/recomendar` | Sugestões de temas |
+| `GET` | `/api/favoritos?user=` | Favoritos (temas e repertórios) de um usuário anônimo |
+| `POST` | `/api/favoritos` | Salva um favorito: `{ user, tema_id }` ou `{ user, repertorio_id }` (idempotente) |
+| `DELETE` | `/api/favoritos/:id?user=` | Remove um favorito pelo id |
+| `DELETE` | `/api/favoritos?user=&tema_id=` | Remove por `tema_id` ou `repertorio_id` |
+
+> Os favoritos são ligados a um identificador anônimo gerado por navegador (sem login) e também ficam no `localStorage`.
 
 ---
 
@@ -80,6 +86,7 @@ PostgreSQL hospedado no **Supabase**. Os scripts ficam em [`backend/sql`](backen
 | `repertorios` | id, categoria, conteudo |
 | `tema_argumento` | tema_id, argumento_id (N:N) |
 | `argumento_repertorio` | argumento_id, repertorio_id (N:N) |
+| `favoritos` | id, tema_id **ou** repertorio_id, user_identifier, created_at |
 
 <details>
 <summary>Ver o diagrama de relacionamento das tabelas</summary>
@@ -91,6 +98,8 @@ erDiagram
     ARGUMENTOS ||--o{ TEMA_ARGUMENTO : "aparece em"
     ARGUMENTOS ||--o{ ARGUMENTO_REPERTORIO : usa
     REPERTORIOS ||--o{ ARGUMENTO_REPERTORIO : "sustenta"
+    TEMAS ||--o{ FAVORITOS : "favoritado em"
+    REPERTORIOS ||--o{ FAVORITOS : "favoritado em"
 ```
 
 </details>
@@ -103,6 +112,33 @@ erDiagram
 - **Backend:** Node.js com Express 5, `cors`, `dotenv` e `pg`
 - **Banco de dados:** PostgreSQL (Supabase)
 - **Deploy:** Vercel (`@vercel/node` para a API e `@vercel/static` para o frontend)
+- **App instalável (PWA):** manifesto + service worker; abre offline o que já foi visitado
+
+---
+
+## Como rodar localmente
+
+Pré-requisitos: Node.js 18+ e um banco PostgreSQL (o projeto usa o Supabase).
+
+```bash
+cd backend
+npm install
+cp .env.example .env     # preencha DB_USER, DB_PASS, DB_HOST, DB_PORT e DB_NAME
+```
+
+1. No SQL Editor do banco, rode [`backend/sql/create_tables.sql`](backend/sql/create_tables.sql) e depois [`backend/sql/seed.sql`](backend/sql/seed.sql).
+2. Suba o servidor, que também serve o frontend:
+
+```bash
+npm start                # http://localhost:3000
+npm test                 # testes do motor de recomendação
+```
+
+Sem o backend local, o frontend (aberto por outra porta ou por `file:`) usa a API publicada na Vercel.
+
+### Instalar como app
+
+No Android (Chrome), use **⋮ → Instalar app**. No iPhone (Safari), **Compartilhar → Adicionar à Tela de Início**.
 
 ---
 
@@ -114,19 +150,32 @@ erDiagram
 ```text
 redacta/
 ├── backend/
-│   ├── server.js            API Express (rotas e busca)
+│   ├── server.js            API Express (rotas, busca e favoritos)
+│   ├── recomendacao.js      motor de recomendação por relevância
 │   ├── db.js                conexão com o PostgreSQL
-│   └── sql/
-│       ├── create_tables.sql
-│       └── seed.sql         eixos, temas, argumentos e repertórios
+│   ├── .env.example         modelo das variáveis de ambiente
+│   ├── sql/
+│   │   ├── create_tables.sql
+│   │   └── seed.sql         eixos, temas, argumentos e repertórios
+│   └── test/                testes do motor de recomendação
 ├── frontend/
 │   ├── index.html
 │   ├── app.js
-│   └── styles.css
+│   ├── styles.css
+│   ├── manifest.json        PWA: nome, cores e ícones
+│   ├── sw.js                PWA: service worker (cache offline)
+│   └── icons/               ícones do app
 ├── docs/                    escopo, fases e fluxo de trabalho
 ├── PRODUCT.md
 ├── vercel.json
+├── LICENSE
 └── README.md
 ```
 
 </details>
+
+---
+
+## Licença
+
+Distribuído sob a licença [MIT](LICENSE).
