@@ -300,10 +300,11 @@ class FavoritosManager {
   notifyUpdate(isAdded, item) {
     this.refreshViews();
     this.syncRemote(item, isAdded);
+    const tipo = String(item.id).startsWith('rep-') ? 'Repertório' : 'Tema';
     if (isAdded) {
-      showToast(`Adicionado aos favoritos: ${item.titulo}`, 'success');
+      showToast(`${tipo} salvo nos favoritos`, 'success');
     } else {
-      showToast(`Removido dos favoritos: ${item.titulo}`, 'info');
+      showToast(`${tipo} removido dos favoritos`, 'info');
     }
   }
 }
@@ -390,8 +391,10 @@ function renderModalFavoritos() {
             <path d="m21 21-4.3-4.3"></path>
           </svg>
         </div>
-        <p class="empty-title">Nenhum favorito encontrado</p>
-        <p class="empty-desc">Tente alterar os termos da busca ou mudar o filtro por categoria.</p>
+        <p class="empty-title">${allItems.length === 0 ? 'Nenhum favorito ainda' : 'Nenhum favorito encontrado'}</p>
+        <p class="empty-desc">${allItems.length === 0
+          ? 'Toque no marcador de um tema ou repertório para salvá-lo aqui.'
+          : 'Tente alterar os termos da busca ou mudar o filtro por categoria.'}</p>
       </div>
     `;
     return;
