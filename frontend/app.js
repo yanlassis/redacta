@@ -14,9 +14,6 @@ const mobileEixosLabel = document.getElementById('mobileEixosLabel');
 const sidebarScroll = document.getElementById('sidebarScroll');
 
 // Seletores do Módulo de Favoritos
-const favoritosList = document.getElementById('favoritosList');
-const favoritosEmptyState = document.getElementById('favoritosEmptyState');
-const btnVerTodosFavoritos = document.getElementById('btnVerTodosFavoritos');
 const topbarFavBtn = document.getElementById('topbarFavBtn');
 const topbarFavBadge = document.getElementById('topbarFavBadge');
 const favoritosModal = document.getElementById('favoritosModal');
@@ -150,6 +147,44 @@ function obterUserId() {
 }
 
 const STORAGE_KEY = 'redacta_favoritos';
+const FAVORITO_REMOTO_ID = /^(tema|rep)-(\d+)$/;
+
+function montarFavoritoTema(tema) {
+  return {
+    id: `tema-${tema.id}`,
+    titulo: tema.titulo,
+    autor: tema.eixo || 'Tema ENEM',
+    categoria: (tema.eixo || 'GERAL').toUpperCase(),
+    icone: 'document',
+    contexto: `Tema de redação do eixo ${tema.eixo || 'Geral'}. Contém teses e repertórios catalogados.`
+  };
+}
+
+function montarFavoritoRepertorio(rep) {
+  const conteudo = String(rep.conteudo || '').trim();
+  return {
+    id: `rep-${rep.id}`,
+    titulo: conteudo.length > 80 ? `${conteudo.slice(0, 80).trimEnd()}…` : conteudo,
+    autor: rep.origem || '',
+    categoria: String(rep.categoria || 'REPERTÓRIO').toUpperCase(),
+    icone: 'document',
+    citacao: conteudo
+  };
+}
+
+// Repertórios exibidos na tela, para montar o favorito a partir do clique no marcador
+const repertoriosVistos = new Map();
+
+function botaoFavoritarRepertorio(rep, origem) {
+  if (rep.id == null) return '';
+  repertoriosVistos.set(String(rep.id), { ...rep, origem });
+  const isFav = favManager.isFavorite(`rep-${rep.id}`);
+  return `<button type="button" class="rep-bookmark-btn${isFav ? ' is-active' : ''}" data-fav-rep-id="${rep.id}" title="${isFav ? 'Remover dos favoritos' : 'Favoritar repertório'}" aria-label="Favoritar repertório">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>`;
+}
 
 class FavoritosManager {
   constructor() {
@@ -170,40 +205,38 @@ class FavoritosManager {
     return [];
   }
 
-  // Favoritos de tema são espelhados no backend; falhas de rede não bloqueiam o uso local
+  // Favoritos de tema e de repertório são espelhados no backend; falhas de rede não bloqueiam o uso local
   syncRemote(item, isAdded) {
-    const match = /^tema-(\d+)$/.exec(String(item.id));
+    const match = FAVORITO_REMOTO_ID.exec(String(item.id));
     const user = obterUserId();
     if (!match || !user) return;
-    const temaId = Number(match[1]);
+    const campo = match[1] === 'tema' ? 'tema_id' : 'repertorio_id';
+    const valor = Number(match[2]);
     const req = isAdded
-      ? apiFetch('/favoritos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tema_id: temaId, user }) })
-      : apiFetch(`/favoritos?user=${encodeURIComponent(user)}&tema_id=${temaId}`, { method: 'DELETE' });
+      ? apiFetch('/favoritos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [campo]: valor, user }) })
+      : apiFetch(`/favoritos?user=${encodeURIComponent(user)}&${campo}=${valor}`, { method: 'DELETE' });
     req.catch(err => console.warn('Não foi possível sincronizar o favorito com o servidor:', err));
   }
 
-  // Carrega do backend os favoritos de tema e os mescla com os locais
+  // Carrega do backend os favoritos de tema e de repertório e os mescla com os locais
   async loadRemote() {
     const user = obterUserId();
     if (!user) return;
     try {
       const res = await apiFetch(`/favoritos?user=${encodeURIComponent(user)}`);
       if (!res.ok) return;
-      const remotos = (await res.json()).filter(f => f.tema_id);
-      const remotosIds = new Set(remotos.map(f => `tema-${f.tema_id}`));
+      const remotos = (await res.json())
+        .map(f => {
+          if (f.tema_id && f.tema_titulo) return montarFavoritoTema({ id: f.tema_id, titulo: f.tema_titulo, eixo: f.eixo_nome });
+          if (f.repertorio_id && f.rep_conteudo) return montarFavoritoRepertorio({ id: f.repertorio_id, categoria: f.rep_categoria, conteudo: f.rep_conteudo });
+          return null;
+        })
+        .filter(Boolean);
+      const remotosIds = new Set(remotos.map(f => f.id));
       const jaLocais = new Set(this.favoritos.map(i => String(i.id)));
-      const novos = remotos
-        .filter(f => !jaLocais.has(`tema-${f.tema_id}`))
-        .map(f => ({
-          id: `tema-${f.tema_id}`,
-          titulo: f.tema_titulo,
-          autor: f.eixo_nome || 'Tema ENEM',
-          categoria: (f.eixo_nome || 'GERAL').toUpperCase(),
-          icone: 'document',
-          contexto: `Tema de redação do eixo ${f.eixo_nome || 'Geral'}. Contém teses e repertórios catalogados.`
-        }));
-      // Favoritos de tema que só existem localmente (ex.: criados offline) sobem para o servidor
-      const soLocais = this.favoritos.filter(i => /^tema-/.test(String(i.id)) && !remotosIds.has(String(i.id)));
+      const novos = remotos.filter(f => !jaLocais.has(f.id));
+      // Favoritos que só existem localmente (ex.: criados offline) sobem para o servidor
+      const soLocais = this.favoritos.filter(i => FAVORITO_REMOTO_ID.test(String(i.id)) && !remotosIds.has(String(i.id)));
       soLocais.forEach(i => this.syncRemote(i, true));
       this.favoritos = [...novos, ...this.favoritos];
       this.saveFavoritos(this.favoritos);
@@ -225,18 +258,12 @@ class FavoritosManager {
     return this.favoritos;
   }
 
-  isFavorite(id, titulo) {
-    return this.favoritos.some(item => 
-      String(item.id) === String(id) || 
-      (titulo && item.titulo && item.titulo.trim().toLowerCase() === titulo.trim().toLowerCase())
-    );
+  isFavorite(id) {
+    return this.favoritos.some(item => String(item.id) === String(id));
   }
 
   toggleFavorite(repertoireData) {
-    const existingIndex = this.favoritos.findIndex(item => 
-      String(item.id) === String(repertoireData.id) || 
-      (item.titulo && repertoireData.titulo && item.titulo.trim().toLowerCase() === repertoireData.titulo.trim().toLowerCase())
-    );
+    const existingIndex = this.favoritos.findIndex(item => String(item.id) === String(repertoireData.id));
 
     let isAdded = false;
     if (existingIndex >= 0) {
@@ -263,9 +290,8 @@ class FavoritosManager {
   }
 
   refreshViews() {
-    renderFavoritosWidget();
     updateFavoritosBadges();
-    updateAllTemaBookmarkButtons();
+    updateAllBookmarkButtons();
     if (favoritosModal && favoritosModal.classList.contains('active')) {
       renderModalFavoritos();
     }
@@ -284,89 +310,20 @@ class FavoritosManager {
 
 const favManager = new FavoritosManager();
 
-function getFavoritoIconSvg(type) {
-  if (type === 'flame') {
-    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
-  } else if (type === 'eye') {
-    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-  } else {
-    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
-  }
-}
-
-function renderFavoritosWidget() {
-  if (!favoritosList) return;
-  const items = favManager.getAll();
-  favoritosList.innerHTML = '';
-
-  if (items.length === 0) {
-    if (favoritosEmptyState) favoritosEmptyState.style.display = 'flex';
-    return;
-  }
-  if (favoritosEmptyState) favoritosEmptyState.style.display = 'none';
-
-  const displayItems = items.slice(0, 4);
-
-  displayItems.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'favorito-item';
-    div.dataset.favId = item.id;
-
-    const authorText = item.autor ? `(${escapeHtml(item.autor)})` : '';
-
-    div.innerHTML = `
-      <div class="favorito-item-icon">
-        ${getFavoritoIconSvg(item.icone || 'document')}
-      </div>
-      <div class="favorito-item-content">
-        <h4 class="favorito-item-title" title="${escapeHtml(item.titulo)}">${escapeHtml(item.titulo)}</h4>
-        ${authorText ? `<span class="favorito-item-author">${authorText}</span>` : ''}
-        <span class="favorito-item-tag">${escapeHtml(item.categoria || 'GERAL')}</span>
-      </div>
-      <button type="button" class="favorito-bookmark-btn" aria-label="Remover dos favoritos" title="Remover dos favoritos" data-remove-id="${escapeHtml(item.id)}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </button>
-    `;
-
-    div.addEventListener('click', (e) => {
-      if (e.target.closest('.favorito-bookmark-btn')) return;
-      openFavoritosModal(item.id);
-    });
-
-    const removeBtn = div.querySelector('.favorito-bookmark-btn');
-    removeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      div.classList.add('removing');
-      setTimeout(() => {
-        favManager.removeFavoriteById(item.id);
-      }, 200);
-    });
-
-    favoritosList.appendChild(div);
-  });
-}
-
 function updateFavoritosBadges() {
   const count = favManager.getAll().length;
   if (topbarFavBadge) {
     topbarFavBadge.textContent = count;
   }
-  const sideBadge = document.getElementById('navFavoritosBadge');
-  if (sideBadge) {
-    sideBadge.textContent = count;
-  }
 }
 
-function updateAllTemaBookmarkButtons() {
-  document.querySelectorAll('.tema-bookmark-btn').forEach(btn => {
-    const temaId = btn.dataset.favTemaId;
-    const card = btn.closest('.tema-card');
-    const titulo = card?.querySelector('.tema-head-info h3')?.textContent?.trim() || '';
-    const isFav = favManager.isFavorite(`tema-${temaId}`, titulo);
+function updateAllBookmarkButtons() {
+  document.querySelectorAll('.tema-bookmark-btn, .rep-bookmark-btn').forEach(btn => {
+    const isTema = btn.classList.contains('tema-bookmark-btn');
+    const favId = isTema ? `tema-${btn.dataset.favTemaId}` : `rep-${btn.dataset.favRepId}`;
+    const isFav = favManager.isFavorite(favId);
     btn.classList.toggle('is-active', isFav);
-    btn.setAttribute('title', isFav ? 'Remover dos favoritos' : 'Favoritar tema');
+    btn.setAttribute('title', isFav ? 'Remover dos favoritos' : (isTema ? 'Favoritar tema' : 'Favoritar repertório'));
     const svg = btn.querySelector('svg');
     if (svg) svg.setAttribute('fill', isFav ? 'currentColor' : 'none');
   });
@@ -673,25 +630,6 @@ function renderizarMenuEixos() {
   `;
   eixosNavList.appendChild(liTodos);
 
-  const liFav = document.createElement('li');
-  liFav.innerHTML = `
-    <a href="#favoritos" id="navFavoritosLink">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-      </svg>
-      <span class="nome">Favoritos</span>
-      <span class="nav-fav-badge" id="navFavoritosBadge">${favManager.getAll().length}</span>
-    </a>
-  `;
-  const aFav = liFav.querySelector('a');
-  if (aFav) {
-    aFav.addEventListener('click', (e) => {
-      e.preventDefault();
-      openFavoritosModal();
-    });
-  }
-  eixosNavList.appendChild(liFav);
-
   todosEixos.forEach(eixo => {
     const li = document.createElement('li');
     const isAtivo = eixoSelecionadoId === eixo.id ? 'active' : '';
@@ -824,7 +762,10 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
           <article class="rep${extra(i, LIMITE_REPERTORIOS)}" data-tipo="${normalizarTipo(rep.categoria)}" data-copyable>
             <div class="entry-meta">
               <p class="rep-tipo" data-part>${rep.categoria}</p>
-              <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
+              <div class="entry-actions">
+                ${botaoFavoritarRepertorio(rep, rep.tema_origem || tema.titulo)}
+                <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
+              </div>
             </div>
             <p class="rep-desc" data-part>${destacarTermo(rep.conteudo, destaqueBusca)}</p>
             ${rep.direto === false && rep.tema_origem ? `<p class="rep-uso">Tema correlato: <em>${destacarTermo(rep.tema_origem, destaqueBusca)}</em></p>` : ''}
@@ -833,7 +774,7 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
       : `<p class="qtd">Nenhum repertório registrado nesta categoria.</p>`;
 
     const isMobileAberto = expandido || idx === 0 ? ' is-open-mobile' : '';
-    const isTemaFav = favManager.isFavorite(`tema-${tema.id}`, tema.titulo);
+    const isTemaFav = favManager.isFavorite(`tema-${tema.id}`);
 
     html += `
       <section class="tema-card${isMobileAberto}" id="tema-${tema.id}" data-tema-id="${tema.id}">
@@ -916,7 +857,10 @@ function renderizarRecomendacaoTemaLivre(rec) {
     <article class="rep" data-tipo="${normalizarTipo(rep.categoria)}" data-copyable>
       <div class="entry-meta">
         <p class="rep-tipo" data-part>${rep.categoria}</p>
-        <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
+        <div class="entry-actions">
+          ${botaoFavoritarRepertorio(rep, rep.eixo)}
+          <button class="copy" type="button" title="Copiar repertório" aria-label="Copiar repertório">${COPY_ICON_SVG}</button>
+        </div>
       </div>
       <p class="rep-desc" data-part>${rep.conteudo}</p>
       <p class="rep-uso">
@@ -1246,15 +1190,7 @@ resultsContainer.addEventListener('click', (e) => {
     const temaId = bookmarkBtn.dataset.favTemaId;
     const tema = (temasExibidosAtualmente || []).find(t => String(t.id) === String(temaId)) || (todosTemas || []).find(t => String(t.id) === String(temaId));
     if (tema) {
-      const itemData = {
-        id: `tema-${tema.id}`,
-        titulo: tema.titulo,
-        autor: tema.eixo || 'Tema ENEM',
-        categoria: (tema.eixo || 'GERAL').toUpperCase(),
-        icone: 'document',
-        contexto: `Tema de redação do eixo ${tema.eixo || 'Geral'}. Contém teses e repertórios catalogados.`
-      };
-      favManager.toggleFavorite(itemData);
+      favManager.toggleFavorite(montarFavoritoTema(tema));
     }
     return;
   }
@@ -1347,9 +1283,15 @@ document.addEventListener('click', async (e) => {
 });
 
 // Listeners do Módulo de Favoritos
-if (btnVerTodosFavoritos) {
-  btnVerTodosFavoritos.addEventListener('click', () => openFavoritosModal());
-}
+// Marcador de favoritar repertório (delegado: os cards são re-renderizados com frequência)
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.rep-bookmark-btn');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const rep = repertoriosVistos.get(btn.dataset.favRepId);
+  if (rep) favManager.toggleFavorite(montarFavoritoRepertorio(rep));
+});
 
 if (topbarFavBtn) {
   topbarFavBtn.addEventListener('click', () => openFavoritosModal());
@@ -1390,7 +1332,6 @@ if (modalSearchInput) {
 }
 
 // Renderiza o widget inicial de favoritos e atualiza os marcadores
-renderFavoritosWidget();
 updateFavoritosBadges();
 favManager.loadRemote();
 

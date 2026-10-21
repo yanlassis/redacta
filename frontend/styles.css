@@ -1326,7 +1326,7 @@ mark {
    MÓDULO DE FAVORITOS & WIDGETS DO DASHBOARD (Fidelidade ao Protótipo Redacta)
    ============================================================================ */
 
-/* Grid do Dashboard com Coluna Direita */
+/* Grid do Dashboard */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -1339,187 +1339,6 @@ mark {
   .dashboard-content {
     max-width: 1440px;
   }
-  .dashboard-grid {
-    grid-template-columns: 1fr 340px;
-    gap: 2.25rem;
-  }
-  .dashboard-aside {
-    position: sticky;
-    top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-}
-
-@media (max-width: 1199px) {
-  .dashboard-aside {
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-}
-
-/* Base dos Cards de Widgets */
-.widget-card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.35rem 1.4rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 3px 10px 0 rgba(7, 25, 54, 0.02);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-}
-
-.widget-card:hover {
-  border-color: var(--border-strong);
-}
-
-.widget-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.15rem;
-}
-
-.widget-header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--ink);
-}
-
-.widget-title {
-  font-family: var(--display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: -0.01em;
-  margin: 0;
-}
-
-.see-all-btn {
-  background: none;
-  border: none;
-  font-family: var(--sans);
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--ink-muted);
-  cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  border-radius: 6px;
-  transition: color 150ms ease, background-color 150ms ease;
-}
-
-.see-all-btn:hover {
-  color: var(--ink);
-  background-color: var(--surface-subtle);
-  text-decoration: underline;
-}
-
-/* Lista de Favoritos */
-.favoritos-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.favorito-item {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.55rem 0.5rem;
-  border-radius: 10px;
-  background-color: transparent;
-  transition: background-color 150ms ease, transform 150ms ease;
-  cursor: pointer;
-  position: relative;
-}
-
-.favorito-item:hover {
-  background-color: var(--surface-subtle);
-}
-
-.favorito-item-icon {
-  width: 42px;
-  height: 42px;
-  background-color: var(--icon-box-bg);
-  color: var(--icon-box-fg);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.favorito-item-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.favorito-item-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.favorito-item-title {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0;
-}
-
-.favorito-item-author {
-  font-size: 0.78rem;
-  color: var(--ink-muted);
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.favorito-item-tag {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--ink-muted);
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-
-.favorito-bookmark-btn {
-  background: none;
-  border: none;
-  color: var(--ink-muted);
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: color 150ms ease, background-color 150ms ease, transform 150ms ease;
-  flex-shrink: 0;
-}
-
-.favorito-bookmark-btn:hover {
-  color: #EF4444;
-  background-color: rgba(239, 68, 68, 0.1);
-  transform: scale(1.08);
-}
-
-.favorito-item.removing {
-  opacity: 0;
-  transform: translateX(16px);
-  transition: opacity 200ms ease, transform 200ms ease;
 }
 
 /* Estado vazio dos favoritos */
@@ -1561,84 +1380,6 @@ mark {
   line-height: 1.35;
 }
 
-/* Widget Continue Estudando */
-.continue-studying-widget .widget-arrow-icon {
-  color: var(--ink-muted);
-  display: flex;
-  align-items: center;
-}
-
-.progress-card-content {
-  display: flex;
-  align-items: center;
-  gap: 1.15rem;
-  margin-bottom: 1.15rem;
-}
-
-.circular-progress-container {
-  position: relative;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.progress-ring {
-  transform: rotate(-90deg);
-}
-
-.progress-value {
-  position: absolute;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--ink);
-  font-family: var(--display);
-}
-
-.progress-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-  flex: 1;
-}
-
-.progress-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.3;
-  margin: 0;
-}
-
-.horizontal-progress-bar {
-  width: 100%;
-  height: 5px;
-  background-color: var(--border);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 5px;
-}
-
-.horizontal-progress-fill {
-  height: 100%;
-  background-color: var(--navy-accent);
-  border-radius: 999px;
-  transition: width 0.6s ease;
-}
-
-.progress-footer {
-  border-top: 1px solid var(--border);
-  padding-top: 0.85rem;
-}
-
-.footer-caption {
-  font-size: 0.78rem;
-  color: var(--ink-muted);
-}
-
 /* Botão de Favoritar no Card de Tema */
 .tema-bookmark-btn {
   background: transparent;
@@ -1673,7 +1414,44 @@ mark {
   color: #60A5FA;
 }
 
-/* Badge de favoritos no Topbar e Sidebar */
+/* Botão de Favoritar Repertório (ao lado do copiar) */
+.entry-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.rep-bookmark-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--ink-muted);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.rep-bookmark-btn:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
+.rep-bookmark-btn.is-active {
+  color: var(--navy-accent);
+  border-color: var(--navy-accent);
+}
+
+:root[data-theme="dark"] .rep-bookmark-btn.is-active {
+  color: #60A5FA;
+  border-color: #60A5FA;
+}
+
+/* Badge de favoritos no Topbar */
 .topbar-fav-btn {
   display: inline-flex;
   align-items: center;
@@ -1708,22 +1486,6 @@ mark {
   min-width: 16px;
   text-align: center;
   border: 1.5px solid var(--surface);
-}
-
-.nav-fav-badge {
-  margin-left: auto;
-  background-color: var(--border);
-  color: var(--ink);
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 2px 7px;
-  transition: all 150ms ease;
-}
-
-.nav-list a.active .nav-fav-badge {
-  background-color: rgba(255, 255, 255, 0.25);
-  color: #FFFFFF;
 }
 
 /* ============================================================================
