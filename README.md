@@ -17,7 +17,7 @@
   <img src="preview.png" alt="Prévia do Redacta" width="650">
 </p>
 
-**Veja o sistema no ar:** [redacta-phi.vercel.app](https://redacta-phi.vercel.app/)
+**Veja o sistema no ar:** [www.redacta.app.br](https://www.redacta.app.br/)
 
 ---
 
