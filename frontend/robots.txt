@@ -1,5 +1,5 @@
+# A API precisa ficar liberada: o conteudo do site (temas, teses e repertorios) e carregado por ela
 User-agent: *
 Allow: /
-Disallow: /api/
 
 Sitemap: https://www.redacta.app.br/sitemap.xml
