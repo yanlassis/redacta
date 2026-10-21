@@ -13,6 +13,21 @@ const mobileEixosBtn = document.getElementById('mobileEixosBtn');
 const mobileEixosLabel = document.getElementById('mobileEixosLabel');
 const sidebarScroll = document.getElementById('sidebarScroll');
 
+// Seletores do Módulo de Favoritos
+const favoritosList = document.getElementById('favoritosList');
+const favoritosEmptyState = document.getElementById('favoritosEmptyState');
+const btnVerTodosFavoritos = document.getElementById('btnVerTodosFavoritos');
+const topbarFavBtn = document.getElementById('topbarFavBtn');
+const topbarFavBadge = document.getElementById('topbarFavBadge');
+const favoritosModal = document.getElementById('favoritosModal');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+const modalFavoritosList = document.getElementById('modalFavoritosList');
+const modalSearchInput = document.getElementById('modalSearchInput');
+const modalFilterPills = document.getElementById('modalFilterPills');
+const favoritosModalCount = document.getElementById('favoritosModalCount');
+const toastNotification = document.getElementById('toastNotification');
+const toastMessage = document.getElementById('toastMessage');
+
 if (mobileEixosBtn && sidebarScroll) {
   mobileEixosBtn.addEventListener('click', () => {
     const aberto = sidebarScroll.classList.toggle('is-open');
@@ -109,6 +124,351 @@ let temasExibidosAtualmente = [];
 let eixoSelecionadoId = null;
 let categoriaSelecionada = 'todas';
 let timeoutId = null;
+
+// ============================================================================
+// MÓDULO DE FAVORITOS (REDACTA)
+// ============================================================================
+const DEFAULT_FAVORITOS = [
+  {
+    id: 'fav-1',
+    titulo: 'A tirania da maioria',
+    autor: 'Alexis de Tocqueville',
+    categoria: 'SOCIOLOGIA',
+    icone: 'flame',
+    citacao: 'A maioria possui um poder tão irresistível que é preciso submeter-se a ela ou morrer.',
+    contexto: 'Crítica aos perigos do conformismo social e a opressão de minorias em regimes democráticos.'
+  },
+  {
+    id: 'fav-2',
+    titulo: 'O contrato social',
+    autor: 'Jean-Jacques Rousseau',
+    categoria: 'FILOSOFIA',
+    icone: 'document',
+    citacao: 'O homem nasce livre, e por toda parte encontra-se a ferros.',
+    contexto: 'Fundamento sobre o pacto social, a soberania popular e a responsabilidade do Estado em assegurar o bem-estar coletivo.'
+  },
+  {
+    id: 'fav-3',
+    titulo: '1984',
+    autor: 'George Orwell',
+    categoria: 'LITERATURA',
+    icone: 'document',
+    citacao: 'Guerra é Paz. Liberdade é Escravidão. Ignorância é Força.',
+    contexto: 'Distopia sobre vigilância em massa, controle de dados, manipulação midiática e restrição da liberdade individual.'
+  },
+  {
+    id: 'fav-4',
+    titulo: 'A invisibilidade social e o preconceito',
+    autor: 'Contemporâneo',
+    categoria: 'ATUALIDADES',
+    icone: 'eye',
+    citacao: 'O verdadeiro olhar humano enxerga para além da utilidade econômica do indivíduo.',
+    contexto: 'Análise sobre a indiferença da sociedade perante trabalhadores marginalizados e a desumanização cotidiana.'
+  }
+];
+
+const STORAGE_KEY = 'redacta_favoritos';
+
+class FavoritosManager {
+  constructor() {
+    this.favoritos = this.loadFavoritos();
+  }
+
+  loadFavoritos() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar favoritos do localStorage:', e);
+    }
+    this.saveFavoritos(DEFAULT_FAVORITOS);
+    return [...DEFAULT_FAVORITOS];
+  }
+
+  saveFavoritos(items) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch (e) {
+      console.warn('Erro ao salvar favoritos no localStorage:', e);
+    }
+  }
+
+  getAll() {
+    return this.favoritos;
+  }
+
+  isFavorite(id, titulo) {
+    return this.favoritos.some(item => 
+      String(item.id) === String(id) || 
+      (titulo && item.titulo && item.titulo.trim().toLowerCase() === titulo.trim().toLowerCase())
+    );
+  }
+
+  toggleFavorite(repertoireData) {
+    const existingIndex = this.favoritos.findIndex(item => 
+      String(item.id) === String(repertoireData.id) || 
+      (item.titulo && repertoireData.titulo && item.titulo.trim().toLowerCase() === repertoireData.titulo.trim().toLowerCase())
+    );
+
+    let isAdded = false;
+    if (existingIndex >= 0) {
+      this.favoritos.splice(existingIndex, 1);
+      isAdded = false;
+    } else {
+      this.favoritos.unshift(repertoireData);
+      isAdded = true;
+    }
+
+    this.saveFavoritos(this.favoritos);
+    this.notifyUpdate(isAdded, repertoireData);
+    return isAdded;
+  }
+
+  removeFavoriteById(id) {
+    const item = this.favoritos.find(i => String(i.id) === String(id));
+    if (!item) return null;
+
+    this.favoritos = this.favoritos.filter(i => String(i.id) !== String(id));
+    this.saveFavoritos(this.favoritos);
+    this.notifyUpdate(false, item);
+    return item;
+  }
+
+  notifyUpdate(isAdded, item) {
+    renderFavoritosWidget();
+    updateFavoritosBadges();
+    updateAllTemaBookmarkButtons();
+    if (favoritosModal && favoritosModal.classList.contains('active')) {
+      renderModalFavoritos();
+    }
+    if (isAdded) {
+      showToast(`Adicionado aos favoritos: ${item.titulo}`, 'success');
+    } else {
+      showToast(`Removido dos favoritos: ${item.titulo}`, 'info');
+    }
+  }
+}
+
+const favManager = new FavoritosManager();
+
+function getFavoritoIconSvg(type) {
+  if (type === 'flame') {
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`;
+  } else if (type === 'eye') {
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  } else {
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
+  }
+}
+
+function renderFavoritosWidget() {
+  if (!favoritosList) return;
+  const items = favManager.getAll();
+  favoritosList.innerHTML = '';
+
+  if (items.length === 0) {
+    if (favoritosEmptyState) favoritosEmptyState.style.display = 'flex';
+    return;
+  }
+  if (favoritosEmptyState) favoritosEmptyState.style.display = 'none';
+
+  const displayItems = items.slice(0, 4);
+
+  displayItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'favorito-item';
+    div.dataset.favId = item.id;
+
+    const authorText = item.autor ? `(${item.autor})` : '';
+
+    div.innerHTML = `
+      <div class="favorito-item-icon">
+        ${getFavoritoIconSvg(item.icone || 'document')}
+      </div>
+      <div class="favorito-item-content">
+        <h4 class="favorito-item-title" title="${item.titulo}">${item.titulo}</h4>
+        ${authorText ? `<span class="favorito-item-author">${authorText}</span>` : ''}
+        <span class="favorito-item-tag">${item.categoria || 'GERAL'}</span>
+      </div>
+      <button type="button" class="favorito-bookmark-btn" aria-label="Remover dos favoritos" title="Remover dos favoritos" data-remove-id="${item.id}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </button>
+    `;
+
+    div.addEventListener('click', (e) => {
+      if (e.target.closest('.favorito-bookmark-btn')) return;
+      openFavoritosModal(item.id);
+    });
+
+    const removeBtn = div.querySelector('.favorito-bookmark-btn');
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      div.classList.add('removing');
+      setTimeout(() => {
+        favManager.removeFavoriteById(item.id);
+      }, 200);
+    });
+
+    favoritosList.appendChild(div);
+  });
+}
+
+function updateFavoritosBadges() {
+  const count = favManager.getAll().length;
+  if (topbarFavBadge) {
+    topbarFavBadge.textContent = count;
+  }
+  const sideBadge = document.getElementById('navFavoritosBadge');
+  if (sideBadge) {
+    sideBadge.textContent = count;
+  }
+}
+
+function updateAllTemaBookmarkButtons() {
+  document.querySelectorAll('.tema-bookmark-btn').forEach(btn => {
+    const temaId = btn.dataset.favTemaId;
+    const card = btn.closest('.tema-card');
+    const titulo = card?.querySelector('.tema-head-info h3')?.textContent?.trim() || '';
+    const isFav = favManager.isFavorite(`tema-${temaId}`, titulo);
+    btn.classList.toggle('is-active', isFav);
+    btn.setAttribute('title', isFav ? 'Remover dos favoritos' : 'Favoritar tema');
+    const svg = btn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', isFav ? 'currentColor' : 'none');
+  });
+}
+
+let modalFilter = 'TODOS';
+let modalSearch = '';
+
+function openFavoritosModal(highlightId = null) {
+  if (!favoritosModal) return;
+  favoritosModal.classList.add('active');
+  favoritosModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  renderModalFavoritos();
+
+  if (highlightId) {
+    setTimeout(() => {
+      const el = document.getElementById(`modal-card-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.borderColor = 'var(--navy-accent)';
+      }
+    }, 150);
+  }
+}
+
+function closeFavoritosModal() {
+  if (!favoritosModal) return;
+  favoritosModal.classList.remove('active');
+  favoritosModal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+function renderModalFavoritos() {
+  if (!modalFavoritosList) return;
+  const allItems = favManager.getAll();
+
+  if (favoritosModalCount) {
+    favoritosModalCount.textContent = allItems.length;
+  }
+
+  const filtered = allItems.filter(item => {
+    const matchesCategory = modalFilter === 'TODOS' || 
+      (item.categoria && item.categoria.toUpperCase().includes(modalFilter.toUpperCase()));
+
+    const term = modalSearch.toLowerCase();
+    const matchesSearch = !term || 
+      (item.titulo && item.titulo.toLowerCase().includes(term)) ||
+      (item.autor && item.autor.toLowerCase().includes(term)) ||
+      (item.contexto && item.contexto.toLowerCase().includes(term)) ||
+      (item.citacao && item.citacao.toLowerCase().includes(term));
+
+    return matchesCategory && matchesSearch;
+  });
+
+  modalFavoritosList.innerHTML = '';
+
+  if (filtered.length === 0) {
+    modalFavoritosList.innerHTML = `
+      <div class="favoritos-empty-state" style="margin: 1.5rem 0;">
+        <div class="empty-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+        </div>
+        <p class="empty-title">Nenhum favorito encontrado</p>
+        <p class="empty-desc">Tente alterar os termos da busca ou mudar o filtro por categoria.</p>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(item => {
+    const card = document.createElement('article');
+    card.className = 'modal-favorito-card';
+    card.id = `modal-card-${item.id}`;
+
+    const authorText = item.autor ? ` • ${item.autor}` : '';
+    const textToCopy = item.citacao || item.contexto || item.titulo;
+
+    card.innerHTML = `
+      <div class="modal-favorito-top">
+        <div>
+          <span class="badge-pill" style="margin-bottom: 0.35rem; display: inline-block;">${item.categoria || 'REPERTÓRIO'}</span>
+          <h3 class="modal-favorito-title">${item.titulo}${authorText}</h3>
+        </div>
+        <button type="button" class="remove-modal-favorito-btn" title="Remover de favoritos" data-id="${item.id}">
+          Remover
+        </button>
+      </div>
+
+      ${item.citacao ? `<p class="modal-favorito-desc"><em>"${item.citacao}"</em></p>` : ''}
+      ${item.contexto ? `<p class="modal-favorito-desc" style="color: var(--ink-muted); font-size: 0.8rem;">${item.contexto}</p>` : ''}
+
+      <div class="modal-favorito-actions">
+        <button type="button" class="copy-quote-btn" data-quote="${encodeURIComponent(textToCopy)}">
+          ${COPY_ICON_SVG}
+          <span>Copiar citação para redação</span>
+        </button>
+      </div>
+    `;
+
+    const removeBtn = card.querySelector('.remove-modal-favorito-btn');
+    removeBtn.addEventListener('click', () => {
+      favManager.removeFavoriteById(item.id);
+    });
+
+    const copyBtn = card.querySelector('.copy-quote-btn');
+    copyBtn.addEventListener('click', () => {
+      const text = decodeURIComponent(copyBtn.dataset.quote);
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Citação copiada para a área de transferência! 📋', 'success');
+      }).catch(() => {
+        showToast('Não foi possível copiar o texto.', 'error');
+      });
+    });
+
+    modalFavoritosList.appendChild(card);
+  });
+}
+
+let toastTimer = null;
+function showToast(message, type = 'info') {
+  if (!toastNotification || !toastMessage) return;
+  toastMessage.textContent = message;
+  toastNotification.classList.add('active');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastNotification.classList.remove('active');
+  }, 3000);
+}
 
 // Ícones SVG de Cópia e Confirmação
 const COPY_ICON_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
@@ -283,6 +643,25 @@ function renderizarMenuEixos() {
   `;
   eixosNavList.appendChild(liTodos);
 
+  const liFav = document.createElement('li');
+  liFav.innerHTML = `
+    <a href="#favoritos" id="navFavoritosLink">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span class="nome">Favoritos</span>
+      <span class="nav-fav-badge" id="navFavoritosBadge">${favManager.getAll().length}</span>
+    </a>
+  `;
+  const aFav = liFav.querySelector('a');
+  if (aFav) {
+    aFav.addEventListener('click', (e) => {
+      e.preventDefault();
+      openFavoritosModal();
+    });
+  }
+  eixosNavList.appendChild(liFav);
+
   todosEixos.forEach(eixo => {
     const li = document.createElement('li');
     const isAtivo = eixoSelecionadoId === eixo.id ? 'active' : '';
@@ -424,6 +803,7 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
       : `<p class="qtd">Nenhum repertório registrado nesta categoria.</p>`;
 
     const isMobileAberto = expandido || idx === 0 ? ' is-open-mobile' : '';
+    const isTemaFav = favManager.isFavorite(`tema-${tema.id}`, tema.titulo);
 
     html += `
       <section class="tema-card${isMobileAberto}" id="tema-${tema.id}" data-tema-id="${tema.id}">
@@ -442,6 +822,11 @@ function renderizarLandingTemas(temas, contextoCustom = null, destaqueBusca = ''
               <span class="mobile-card-hint">${args.length} teses · ${repsFiltrados.length} repertórios</span>
             </div>
           </div>
+          <button type="button" class="tema-bookmark-btn ${isTemaFav ? 'is-active' : ''}" data-fav-tema-id="${tema.id}" title="${isTemaFav ? 'Remover dos favoritos' : 'Favoritar tema'}" aria-label="Favoritar tema">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="${isTemaFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </button>
           <button type="button" class="mobile-card-chevron" aria-label="Expandir ou recolher tema">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="6 9 12 15 18 9"/>
@@ -824,6 +1209,26 @@ if (btnLimparCategoria) {
 
 // Clicar na seta ou em um card fechado no celular abre o acordeão; clicar no título do tema (ou cabeçalho no desktop) abre o tema completo com todas as teses e repertórios relacionados
 resultsContainer.addEventListener('click', (e) => {
+  const bookmarkBtn = e.target.closest('.tema-bookmark-btn');
+  if (bookmarkBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const temaId = bookmarkBtn.dataset.favTemaId;
+    const tema = (temasExibidosAtualmente || []).find(t => String(t.id) === String(temaId)) || (todosTemas || []).find(t => String(t.id) === String(temaId));
+    if (tema) {
+      const itemData = {
+        id: `tema-${tema.id}`,
+        titulo: tema.titulo,
+        autor: tema.eixo || 'Tema ENEM',
+        categoria: (tema.eixo || 'GERAL').toUpperCase(),
+        icone: 'document',
+        contexto: `Tema de redação do eixo ${tema.eixo || 'Geral'}. Contém teses e repertórios catalogados.`
+      };
+      favManager.toggleFavorite(itemData);
+    }
+    return;
+  }
+
   const chevronBtn = e.target.closest('.mobile-card-chevron');
   const cardTop = e.target.closest('[data-toggle-card]');
   const temaLink = e.target.closest('.tema-link');
@@ -910,6 +1315,53 @@ document.addEventListener('click', async (e) => {
     btn.classList.remove('copied');
   }, 1500);
 });
+
+// Listeners do Módulo de Favoritos
+if (btnVerTodosFavoritos) {
+  btnVerTodosFavoritos.addEventListener('click', () => openFavoritosModal());
+}
+
+if (topbarFavBtn) {
+  topbarFavBtn.addEventListener('click', () => openFavoritosModal());
+}
+
+if (modalCloseBtn) {
+  modalCloseBtn.addEventListener('click', closeFavoritosModal);
+}
+
+if (favoritosModal) {
+  favoritosModal.addEventListener('click', (e) => {
+    if (e.target === favoritosModal) closeFavoritosModal();
+  });
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && favoritosModal && favoritosModal.classList.contains('active')) {
+    closeFavoritosModal();
+  }
+});
+
+if (modalFilterPills) {
+  modalFilterPills.addEventListener('click', (e) => {
+    const pill = e.target.closest('.filter-pill');
+    if (!pill) return;
+    modalFilterPills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    modalFilter = pill.dataset.filter || 'TODOS';
+    renderModalFavoritos();
+  });
+}
+
+if (modalSearchInput) {
+  modalSearchInput.addEventListener('input', (e) => {
+    modalSearch = e.target.value.trim();
+    renderModalFavoritos();
+  });
+}
+
+// Renderiza o widget inicial de favoritos e atualiza os marcadores
+renderFavoritosWidget();
+updateFavoritosBadges();
 
 // Inicia carregando os dados reais do Supabase
 inicializarLandingPage();
