@@ -6,7 +6,7 @@
   <title>Redacta — Repertórios e Argumentos por Eixo Temático</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -38,7 +38,7 @@
 
     <div class="sidebar-scroll" id="sidebarScroll">
       <nav class="sidebar-nav" aria-label="Navegação por Eixos Temáticos">
-        <p class="sidebar-label">Eixos Temáticos</p>
+        <p class="sidebar-label">Navegação</p>
         <ul class="nav-list" id="eixosNavList">
           <li><span class="qtd">Carregando eixos...</span></li>
         </ul>
@@ -72,6 +72,15 @@
 
       <div class="topbar-actions">
         <button type="button" class="btn-outline" id="btnVerTodos" style="display: none;">Ver todos os temas</button>
+        
+        <!-- Botão rápido de Favoritos na barra superior -->
+        <button type="button" class="topbar-fav-btn" id="topbarFavBtn" title="Ver meus favoritos" aria-label="Abrir favoritos">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="fav-badge-count" id="topbarFavBadge">4</span>
+        </button>
+
         <button type="button" class="theme-toggle" id="themeToggle" title="Alternar entre modo claro e escuro" aria-label="Alternar tema">
           <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="4"/>
@@ -84,27 +93,158 @@
       </div>
     </header>
 
-    <!-- CONTEÚDO CENTRAL DO DASHBOARD -->
+    <!-- CONTEÚDO CENTRAL DO DASHBOARD EM GRID -->
     <main class="dashboard-content">
-      <!-- Introdução compacta -->
-      <section class="page-intro">
-        <h1>Repertórios por tema</h1>
-        <p>Escolha uma categoria ou pesquise seu próprio tema na busca acima.</p>
-      </section>
+      <div class="dashboard-grid">
+        <!-- COLUNA PRINCIPAL (FEED DE TEMAS, CATEGORIAS E REPERTÓRIOS) -->
+        <div class="feed-column">
+          <!-- Introdução compacta -->
+          <section class="page-intro">
+            <h1>Repertórios por tema</h1>
+            <p>Escolha uma categoria ou pesquise seu próprio tema na busca acima.</p>
+          </section>
 
-      <!-- Categorias agrupadas (vindas da API) -->
-      <section class="categories-section" aria-label="Categorias de repertório">
-        <div class="category-cards" id="categoriasChips">
-          <span class="qtd">Carregando categorias...</span>
+          <!-- Categorias agrupadas (vindas da API) -->
+          <section class="categories-section" aria-label="Categorias de repertório">
+            <div class="category-cards" id="categoriasChips">
+              <span class="qtd">Carregando categorias...</span>
+            </div>
+          </section>
+
+          <!-- Seção de Temas, Teses e Repertórios (vindos da API) -->
+          <section class="results-section" id="resultsContainer" aria-live="polite">
+            <div class="empty-state">Carregando repertórios e teses do banco de dados...</div>
+          </section>
         </div>
-      </section>
 
-      <!-- Seção de Temas, Teses e Repertórios (vindos da API) -->
-      <section class="results-section" id="resultsContainer" aria-live="polite">
-        <div class="empty-state">Carregando repertórios e teses do banco de dados...</div>
-      </section>
+        <!-- PAINEL LATERAL DIREITO: FAVORITOS + CONTINUE ESTUDANDO -->
+        <aside class="dashboard-aside" id="dashboardAside">
+          <!-- WIDGET FAVORITOS (PROTÓTIPO REDACTA) -->
+          <section class="widget-card favoritos-widget" id="favoritosWidget">
+            <div class="widget-header">
+              <div class="widget-header-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h2 class="widget-title">Favoritos</h2>
+              </div>
+              <button type="button" class="see-all-btn" id="btnVerTodosFavoritos" title="Abrir painel completo de favoritos">Ver todos</button>
+            </div>
+
+            <!-- Lista de Favoritos interativa -->
+            <div class="favoritos-list" id="favoritosList">
+              <!-- Renderizado dinamicamente via JS -->
+            </div>
+
+            <!-- Estado Vazio -->
+            <div class="favoritos-empty-state" id="favoritosEmptyState" style="display: none;">
+              <div class="empty-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <p class="empty-title">Nenhum favorito ainda</p>
+              <p class="empty-desc">Clique no marcador dos temas para salvá-los aqui.</p>
+            </div>
+          </section>
+
+          <!-- WIDGET CONTINUE ESTUDANDO -->
+          <section class="widget-card continue-studying-widget">
+            <div class="widget-header">
+              <h2 class="widget-title">Continue estudando</h2>
+              <span class="widget-arrow-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="m12 5 7 7-7 7"></path>
+                </svg>
+              </span>
+            </div>
+
+            <div class="progress-card-content">
+              <div class="circular-progress-container">
+                <svg class="progress-ring" width="56" height="56">
+                  <circle class="progress-ring-bg" stroke="var(--border)" stroke-width="5" fill="transparent" r="22" cx="28" cy="28"></circle>
+                  <circle class="progress-ring-fill" stroke="var(--navy-accent)" stroke-width="5" stroke-dasharray="138" stroke-dashoffset="48" stroke-linecap="round" fill="transparent" r="22" cx="28" cy="28"></circle>
+                </svg>
+                <span class="progress-value">65%</span>
+              </div>
+
+              <div class="progress-info">
+                <h3 class="progress-title">Individualismo na sociedade contemporânea</h3>
+                <span class="repertoire-badge">FILOSOFIA</span>
+                <div class="horizontal-progress-bar">
+                  <div class="horizontal-progress-fill" style="width: 65%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="progress-footer">
+              <span class="footer-caption">Leitura em andamento</span>
+            </div>
+          </section>
+        </aside>
+      </div>
     </main>
   </div>
+</div>
+
+<!-- MODAL / PAINEL COMPLETO "VER TODOS OS FAVORITOS" -->
+<div class="modal-backdrop" id="favoritosModal" aria-hidden="true" role="dialog">
+  <div class="modal-container">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Meus Repertórios Favoritos</h2>
+          <p class="modal-subtitle"><span id="favoritosModalCount">0</span> repertórios e temas salvos para sua redação</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close-btn" id="modalCloseBtn" aria-label="Fechar modal" title="Fechar (Esc)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Barra de pesquisa e filtros dentro do modal -->
+    <div class="modal-controls">
+      <div class="modal-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </svg>
+        <input type="text" id="modalSearchInput" placeholder="Pesquisar nos favoritos...">
+      </div>
+
+      <div class="modal-filter-pills" id="modalFilterPills">
+        <button type="button" class="filter-pill active" data-filter="TODOS">Todos</button>
+        <button type="button" class="filter-pill" data-filter="SOCIOLOGIA">Sociologia</button>
+        <button type="button" class="filter-pill" data-filter="FILOSOFIA">Filosofia</button>
+        <button type="button" class="filter-pill" data-filter="LITERATURA">Literatura</button>
+        <button type="button" class="filter-pill" data-filter="ATUALIDADES">Atualidades</button>
+      </div>
+    </div>
+
+    <!-- Lista detalhada dentro do modal -->
+    <div class="modal-body" id="modalFavoritosList">
+      <!-- Itens injetados via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- TOAST DE NOTIFICAÇÃO FLUTUANTE -->
+<div class="toast-notification" id="toastNotification" aria-live="polite">
+  <div class="toast-icon" id="toastIcon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </div>
+  <span class="toast-message" id="toastMessage">Adicionado aos favoritos</span>
 </div>
 
 <script src="app.js"></script>
