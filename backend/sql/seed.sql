@@ -1163,6 +1163,332 @@ INSERT INTO argumento_repertorio (argumento_id, repertorio_id) VALUES
 (217, 218), (218, 219),
 (219, 220), (220, 221);
 
+-- ============================================================================
+-- 18. SEGUNDA EXPANSÃO DA BASE (Temas 111 a 140 | Argumentos 221 a 280 | Repertórios 222 a 281)
+-- +30 Novos Temas (3 por Eixo) | +60 Teses | +60 Repertórios
+-- ============================================================================
+
+INSERT INTO temas (id, titulo, eixo_id) VALUES
+-- Eixo 1: Saúde Pública e Bioética
+(111, 'A gordofobia estrutural e os obstáculos ao cuidado integral de pessoas gordas no sistema de saúde', 1),
+(112, 'O uso de esteroides anabolizantes por jovens e a cultura da hipertrofia nas redes sociais', 1),
+(113, 'As epidemias de dengue e os desafios do controle de arboviroses nas cidades brasileiras', 1),
+
+-- Eixo 2: Tecnologia, Ciência e Sociedade Digital
+(114, 'O cyberbullying e a violência virtual entre adolescentes no Brasil', 2),
+(115, 'A regulação das plataformas digitais e os limites da moderação de conteúdo', 2),
+(116, 'O uso de celulares nas escolas e seus impactos na aprendizagem e na convivência', 2),
+
+-- Eixo 3: Educação e Formação Cidadã
+(117, 'A permanência de estudantes cotistas no ensino superior e o papel da assistência estudantil', 3),
+(118, 'O ensino domiciliar (homeschooling) e a função socializadora da escola no Brasil', 3),
+(119, 'A educação em sexualidade nas escolas como instrumento de prevenção ao abuso sexual infantil', 3),
+
+-- Eixo 4: Meio Ambiente, Clima e Território
+(120, 'Os incêndios no Pantanal e a fragilidade da proteção das áreas úmidas brasileiras', 4),
+(121, 'O desperdício de alimentos e a insustentabilidade dos sistemas alimentares', 4),
+(122, 'A poluição do ar nas metrópoles e seus impactos invisíveis sobre a saúde da população', 4),
+
+-- Eixo 5: Cidadania, Direitos Humanos e Minorias
+(123, 'Os desafios para a acessibilidade e a inclusão de pessoas com deficiência no espaço urbano e no trabalho', 5),
+(124, 'A pobreza menstrual e a dignidade de meninas e mulheres em situação de vulnerabilidade', 5),
+(125, 'O racismo no mercado de trabalho e a sub-representação negra em cargos de liderança', 5),
+
+-- Eixo 6: Cultura, Memória e Identidade Nacional
+(126, 'A valorização da literatura de cordel e da cultura popular nordestina', 6),
+(127, 'O futebol feminino e a superação do preconceito de gênero no esporte brasileiro', 6),
+(128, 'O apagamento da história indígena e afro-brasileira nos currículos e livros didáticos', 6),
+
+-- Eixo 7: Trabalho, Economia e Desigualdade
+(129, 'O superendividamento das famílias brasileiras e a cultura do crédito fácil', 7),
+(130, 'A desigualdade salarial entre homens e mulheres no mercado de trabalho brasileiro', 7),
+(131, 'A automação, a inteligência artificial e o risco de desemprego tecnológico', 7),
+
+-- Eixo 8: Segurança Pública, Justiça e Democracia
+(132, 'O crescimento dos golpes virtuais e dos crimes cibernéticos no Brasil', 8),
+(133, 'A flexibilização do acesso a armas de fogo e seus impactos sobre a violência letal', 8),
+(134, 'O tráfico de pessoas e a exploração de mulheres e crianças no Brasil', 8),
+
+-- Eixo 9: Infância, Juventude e Relações Familiares
+(135, 'A exposição precoce de crianças às telas e os impactos no desenvolvimento infantil', 9),
+(136, 'O adoecimento mental de adolescentes e o aumento dos casos de autolesão', 9),
+(137, 'A falta de vagas em creches e os desafios para garantir os direitos da primeira infância', 9),
+
+-- Eixo 10: Mobilidade Urbana, Habitação e Direito à Cidade
+(138, 'A precariedade do saneamento básico e seus efeitos sobre a saúde nas periferias', 10),
+(139, 'A mobilidade ativa e a falta de infraestrutura para pedestres e ciclistas nas cidades brasileiras', 10),
+(140, 'A proliferação de condomínios fechados e a fragmentação do espaço público urbano', 10);
+
+-- 19. ARGUMENTOS DA SEGUNDA EXPANSÃO (221 a 280 — 2 por tema)
+INSERT INTO argumentos (id, descricao) VALUES
+-- Tema 111 (Gordofobia)
+(221, 'A associação moral entre corpo gordo e falta de disciplina reduz o atendimento ao índice de massa corporal: queixas são atribuídas ao peso sem investigação, e o medo da humilhação leva pacientes a adiarem consultas e exames.'),
+(222, 'A inadequação da infraestrutura — macas, cadeiras, aparelhos de imagem e assentos do transporte público — exclui fisicamente pessoas gordas dos serviços essenciais, configurando uma discriminação estrutural e não apenas individual.'),
+-- Tema 112 (Anabolizantes)
+(223, 'A estética hipermusculosa difundida por influenciadores fitness associa masculinidade e sucesso a corpos alcançáveis apenas com hormônios, normalizando entre adolescentes o uso de substâncias com graves riscos cardíacos, hepáticos e endócrinos.'),
+(224, 'O comércio clandestino de esteroides em academias e redes sociais, sem fiscalização efetiva, expõe jovens a produtos falsificados e a protocolos de automedicação sem qualquer acompanhamento médico.'),
+-- Tema 113 (Dengue e arboviroses)
+(225, 'A urbanização desordenada, com coleta de lixo irregular e abastecimento intermitente que obriga famílias a armazenar água, cria criadouros permanentes do Aedes aegypti justamente nas periferias.'),
+(226, 'As mudanças climáticas, com temperaturas mais altas e chuvas irregulares, ampliam a área de circulação do mosquito e encurtam seu ciclo reprodutivo, tornando as epidemias mais longas, frequentes e difíceis de conter.'),
+
+-- Tema 114 (Cyberbullying)
+(227, 'O anonimato e a viralização ampliam o alcance e a permanência das agressões virtuais, que deixam de terminar no portão da escola e passam a perseguir a vítima em tempo integral, inclusive dentro de casa.'),
+(228, 'A omissão de escolas e famílias, que tratam a violência virtual como mera "brincadeira", retarda a intervenção e converte o sofrimento das vítimas em isolamento, queda no rendimento escolar e autolesão.'),
+-- Tema 115 (Regulação das plataformas)
+(229, 'O modelo de negócios baseado em engajamento remunera conteúdos extremos e desinformativos, de modo que a moderação voluntária das plataformas entra em conflito direto com seu próprio interesse econômico.'),
+(230, 'A ausência de regras de transparência e de devido processo na moderação deixa a definição dos limites da liberdade de expressão nas mãos de empresas privadas estrangeiras, sem controle democrático nem direito de contestação.'),
+-- Tema 116 (Celulares nas escolas)
+(231, 'A presença constante do smartphone em sala fragmenta a atenção dos estudantes, já que notificações projetadas para capturar o usuário competem com o esforço de concentração prolongada exigido pela aprendizagem.'),
+(232, 'A proibição isolada, sem educação midiática e sem alternativas de convivência nos intervalos, combate o sintoma, mas não prepara os jovens para o uso crítico e saudável da tecnologia fora dos muros da escola.'),
+
+-- Tema 117 (Permanência de cotistas)
+(233, 'O acesso por cotas sem uma assistência estudantil robusta — moradia, alimentação, transporte e bolsas — expõe estudantes de baixa renda à evasão por motivos financeiros, convertendo a inclusão em uma passagem temporária.'),
+(234, 'O ambiente acadêmico elitizado e o racismo institucional produzem um sentimento de não pertencimento entre cotistas, cuja permanência depende também de acolhimento simbólico, tutoria e representatividade no corpo docente.'),
+-- Tema 118 (Homeschooling)
+(235, 'A escola é um espaço privilegiado de convivência com a diferença e de formação democrática; retirar a criança dela restringe seu contato com a pluralidade de visões de mundo que sustenta a vida pública.'),
+(236, 'Sem fiscalização estatal estruturada, o ensino domiciliar pode ocultar casos de violência doméstica e de trabalho infantil, já que a escola é uma das principais portas de notificação da rede de proteção à criança.'),
+-- Tema 119 (Educação em sexualidade e abuso infantil)
+(237, 'Como a maior parte da violência sexual contra crianças ocorre dentro de casa e é cometida por pessoas próximas, a escola costuma ser o único espaço em que a vítima aprende a nomear o abuso e encontra um adulto de confiança para denunciá-lo.'),
+(238, 'A desinformação que confunde educação em sexualidade com incentivo à sexualização precoce bloqueia conteúdos sobre consentimento, limites e partes do corpo, deixando crianças sem vocabulário para pedir ajuda.'),
+
+-- Tema 120 (Incêndios no Pantanal)
+(239, 'O uso do fogo para abertura e renovação de pastagens, somado a secas cada vez mais severas, transforma queimadas que seriam controladas em incêndios de grandes proporções, impossíveis de conter com as brigadas disponíveis.'),
+(240, 'A destruição dos habitats ameaça uma das maiores concentrações de biodiversidade em áreas úmidas do planeta e compromete a pesca e o turismo dos quais dependem as comunidades tradicionais pantaneiras.'),
+-- Tema 121 (Desperdício de alimentos)
+(241, 'As perdas ao longo da cadeia produtiva — colheita, transporte precário e padrões estéticos exigidos pelo varejo — convivem com a fome, revelando que o problema alimentar é sobretudo de distribuição, e não de produção.'),
+(242, 'O desperdício também é uma questão ambiental: alimentos descartados em lixões emitem metano, e cada refeição jogada fora carrega consigo a água, a energia e o solo consumidos para produzi-la.'),
+-- Tema 122 (Poluição do ar)
+(243, 'A dependência de combustíveis fósseis e a priorização do transporte individual concentram poluentes nas metrópoles, provocando doenças respiratórias e cardiovasculares que sobrecarregam silenciosamente o SUS.'),
+(244, 'A poluição do ar é socialmente desigual: populações periféricas, que vivem às margens de vias expressas e polos industriais, respiram o ar mais contaminado e têm menor acesso a diagnóstico e tratamento.'),
+
+-- Tema 123 (Acessibilidade e pessoas com deficiência)
+(245, 'Calçadas irregulares, transporte sem adaptação e edifícios sem rampas ou elevadores restringem o direito de ir e vir das pessoas com deficiência, transformando a cidade em um conjunto de barreiras à cidadania.'),
+(246, 'O descumprimento da Lei de Cotas por empresas, frequentemente justificado por uma suposta falta de qualificação, revela o capacitismo do mercado de trabalho e mantém pessoas com deficiência fora do emprego formal.'),
+-- Tema 124 (Pobreza menstrual)
+(247, 'A falta de acesso a absorventes leva meninas a faltarem às aulas durante a menstruação, acumulando perdas de aprendizagem que aprofundam a desigualdade de gênero na trajetória escolar.'),
+(248, 'O tabu em torno da menstruação silencia o tema em famílias e escolas, e a improvisação com papel, jornal ou panos reutilizados sem higiene adequada expõe meninas a infecções e constrangimentos.'),
+-- Tema 125 (Racismo no mercado de trabalho)
+(249, 'Mesmo com escolaridade equivalente, trabalhadores negros recebem salários menores e são minoria nos cargos de gestão, evidenciando que o mérito individual não neutraliza a discriminação estrutural.'),
+(250, 'Processos seletivos baseados em indicação, "boa aparência" e redes de contato reproduzem a homogeneidade racial das lideranças, perpetuando a exclusão mesmo sem atos explícitos de discriminação.'),
+
+-- Tema 126 (Cordel e cultura nordestina)
+(251, 'A cultura popular nordestina é frequentemente tratada pela indústria cultural e pela escola como folclore exótico, e não como produção literária legítima, o que reforça estereótipos regionais e preconceitos linguísticos.'),
+(252, 'O cordel, por circular em linguagem acessível e a baixo custo, cumpriu historicamente a função de jornal e de porta de entrada para a leitura no sertão; sua desvalorização apaga um instrumento de democratização do letramento.'),
+-- Tema 127 (Futebol feminino)
+(253, 'Décadas de proibição legal produziram um atraso estrutural no futebol feminino, que ainda convive com menos investimento, calendários instáveis e salários muito inferiores aos pagos no futebol masculino.'),
+(254, 'Estereótipos que associam o esporte à masculinidade afastam as meninas da prática desde a infância e alimentam a baixa visibilidade midiática, que por sua vez reduz patrocínios em um ciclo de invisibilidade.'),
+-- Tema 128 (História indígena e afro-brasileira nos currículos)
+(255, 'A narrativa eurocêntrica dos currículos apresenta povos indígenas e africanos apenas como coadjuvantes passivos — catequizados ou escravizados —, apagando suas resistências, saberes e contribuições à formação nacional.'),
+(256, 'As leis que tornam obrigatório o ensino dessas histórias carecem de formação docente e de material didático adequado, ficando muitas vezes restritas a datas comemorativas e atividades pontuais.'),
+
+-- Tema 129 (Superendividamento)
+(257, 'A oferta agressiva de crédito consignado e do rotativo do cartão, com juros entre os mais altos do mundo, transforma gastos de subsistência em dívidas impagáveis para as famílias de baixa renda.'),
+(258, 'O superendividamento compromete a saúde mental e o consumo das famílias, aprisionando-as em um ciclo no qual novos empréstimos são contraídos apenas para quitar dívidas antigas.'),
+-- Tema 130 (Desigualdade salarial de gênero)
+(259, 'A diferença salarial persiste mesmo quando as mulheres têm escolaridade superior à dos homens, revelando que a penalidade é de gênero e não de qualificação.'),
+(260, 'A chamada "penalidade da maternidade" — interrupção de carreiras, preconceito na contratação e ausência de licenças parentais equilibradas — concentra sobre as mulheres o custo profissional da criação dos filhos.'),
+-- Tema 131 (Automação e desemprego tecnológico)
+(261, 'A automação de tarefas cognitivas rotineiras pela inteligência artificial ameaça ocupações administrativas e de atendimento de nível médio, que historicamente funcionaram como porta de entrada da classe trabalhadora no emprego formal.'),
+(262, 'Sem políticas de requalificação e de redistribuição, os ganhos de produtividade da automação concentram-se nas mãos dos detentores do capital, aprofundando a desigualdade em vez de reduzir a jornada de trabalho.'),
+
+-- Tema 132 (Golpes virtuais e crimes cibernéticos)
+(263, 'Os golpes virtuais exploram a baixa educação digital, sobretudo de idosos, por meio de engenharia social — falsas centrais bancárias, perfis clonados e links fraudulentos — que dispensa qualquer invasão técnica sofisticada.'),
+(264, 'A velocidade das transferências instantâneas e o uso de "contas laranjas" dificultam o rastreamento do dinheiro, enquanto delegacias sem estrutura especializada deixam a maioria dos crimes cibernéticos sem solução.'),
+-- Tema 133 (Armas de fogo)
+(265, 'A maior circulação de armas de fogo aumenta a letalidade de conflitos interpessoais banais — brigas de trânsito, discussões domésticas e de vizinhança —, convertendo desentendimentos em homicídios.'),
+(266, 'A flexibilização do controle sobre a compra de armas e munições facilita o desvio de armamento legal para o crime organizado, abastecendo facções e milícias com armas registradas.'),
+-- Tema 134 (Tráfico de pessoas)
+(267, 'A vulnerabilidade econômica torna mulheres, crianças e jovens alvos de falsas promessas de emprego, carreira de modelo ou de jogador no exterior, feitas muitas vezes por aliciadores próximos à própria família.'),
+(268, 'A subnotificação e a confusão entre vítima de tráfico e migrante irregular levam à revitimização: pessoas exploradas são tratadas como infratoras e deportadas, enquanto as redes criminosas permanecem intactas.'),
+
+-- Tema 135 (Telas na primeira infância)
+(269, 'A exposição precoce e prolongada às telas substitui a interação face a face, essencial para o desenvolvimento da linguagem, da atenção e da regulação emocional nos primeiros anos de vida.'),
+(270, 'O uso de telas como "babá eletrônica" reflete a sobrecarga das famílias, sobretudo das mães, e a escassez de espaços públicos seguros de lazer, não podendo ser explicado apenas por negligência individual.'),
+-- Tema 136 (Saúde mental de adolescentes)
+(271, 'A pressão por desempenho, a comparação permanente nas redes sociais e a exposição à violência ampliam a ansiedade e a autolesão entre adolescentes, sem que escolas e unidades de saúde contem com profissionais preparados.'),
+(272, 'O tabu familiar em torno do sofrimento psíquico e a insuficiência de serviços especializados, como os CAPS infantojuvenis, fazem com que muitos adolescentes só recebam cuidado após uma crise grave.'),
+-- Tema 137 (Creches e primeira infância)
+(273, 'A falta de vagas em creches penaliza sobretudo as mães pobres, que são forçadas a abandonar o emprego ou a recorrer a arranjos informais e precários de cuidado.'),
+(274, 'Como os primeiros anos de vida concentram o maior potencial de desenvolvimento cerebral, negligenciar a educação infantil perpetua desigualdades cognitivas que a escola posteriormente tem dificuldade de reverter.'),
+
+-- Tema 138 (Saneamento básico)
+(275, 'A ausência de coleta e tratamento de esgoto expõe as periferias a doenças de veiculação hídrica, como diarreias e leptospirose, que afetam especialmente crianças e comprometem sua frequência escolar.'),
+(276, 'Os investimentos em saneamento tendem a priorizar áreas mais lucrativas, enquanto assentamentos sem regularização fundiária são excluídos das redes formais sob o argumento de que ocupam terrenos irregulares.'),
+-- Tema 139 (Mobilidade ativa)
+(277, 'O planejamento urbano rodoviarista prioriza o automóvel na distribuição do espaço viário, expondo pedestres e ciclistas — os usuários mais vulneráveis do trânsito — a riscos permanentes de atropelamento.'),
+(278, 'As ciclovias concentram-se em áreas nobres e em rotas de lazer, enquanto trabalhadores periféricos que usam a bicicleta por necessidade econômica trafegam sem qualquer infraestrutura de proteção.'),
+-- Tema 140 (Condomínios fechados)
+(279, 'Os condomínios fechados funcionam como enclaves que esvaziam o espaço público e reduzem a convivência entre classes sociais, enfraquecendo a experiência comum de cidade que sustenta a cidadania.'),
+(280, 'O medo da violência legitima muros, câmeras e segurança privada, que apenas deslocam a insegurança para o entorno e privatizam soluções que deveriam ser garantidas pelo poder público.');
+
+-- 20. REPERTÓRIOS DA SEGUNDA EXPANSÃO (222 a 281 — 2 por tema)
+INSERT INTO repertorios (id, categoria, conteudo) VALUES
+-- Tema 111 (Gordofobia)
+(222, 'Sociologia', 'Erving Goffman, sociólogo canadense autor de "Estigma: Notas sobre a Manipulação da Identidade Deteriorada" (1963), define o estigma como um atributo profundamente depreciativo que reduz o indivíduo a uma única marca, levando a sociedade a tratá-lo como alguém "menos que humano".'),
+(223, 'Antropologia', 'Mirian Goldenberg, antropóloga da UFRJ e autora de "O Corpo como Capital" (2007), demonstra que, na cultura brasileira, o corpo magro, jovem e em forma funciona como um capital social, de modo que o corpo fora do padrão é lido como sinal de fracasso moral.'),
+-- Tema 112 (Anabolizantes)
+(224, 'Legislação', 'Resolução do Conselho Federal de Medicina nº 2.333/2023 — Proíbe médicos de prescrever esteroides androgênicos e anabolizantes com finalidade estética, para ganho de massa muscular ou melhora de desempenho esportivo, em razão dos riscos cardiovasculares, hepáticos e psiquiátricos comprovados.'),
+(225, 'Psicologia', 'Harrison Pope, psiquiatra da Universidade Harvard, em "O Complexo de Adônis" (2000, com Katharine Phillips e Roberto Olivardia), descreve a dismorfia muscular — ou vigorexia —, transtorno em que homens se percebem franzinos mesmo sendo musculosos, o que os leva ao uso compulsivo de anabolizantes.'),
+-- Tema 113 (Dengue e arboviroses)
+(226, 'História', 'Oswaldo Cruz e as brigadas mata-mosquitos (1903–1907) — À frente da Diretoria Geral de Saúde Pública, o sanitarista organizou no Rio de Janeiro o combate sistemático aos criadouros do Aedes aegypti, praticamente eliminando a febre amarela urbana da então capital federal.'),
+(227, 'Saúde Coletiva', 'Epidemia de dengue de 2024 — O Brasil registrou mais de 6 milhões de casos prováveis, o maior número de sua série histórica, segundo o Ministério da Saúde; no mesmo ano, tornou-se o primeiro país a oferecer a vacina contra a dengue no sistema público de saúde.'),
+
+-- Tema 114 (Cyberbullying)
+(228, 'Legislação', 'Lei nº 13.185/2015 (Programa de Combate à Intimidação Sistemática) e Lei nº 14.811/2024 — A primeira obriga escolas a prevenir o bullying e o cyberbullying; a segunda incluiu a intimidação sistemática, presencial e virtual, como crime no Código Penal (art. 146-A).'),
+(229, 'Comunicação', 'Jon Ronson, jornalista britânico autor de "Humilhado: como a era da internet mudou o julgamento público" (2015), reconstitui casos de pessoas comuns linchadas virtualmente por uma única publicação, mostrando como a humilhação em rede é desproporcional, permanente e lucrativa para as plataformas.'),
+-- Tema 115 (Regulação das plataformas)
+(230, 'Direito', 'Julgamento do STF sobre o artigo 19 do Marco Civil da Internet (Lei nº 12.965/2014), concluído em 2025 — O tribunal declarou parcialmente inconstitucional a regra que só responsabilizava as plataformas após ordem judicial, ampliando seu dever de remover conteúdos ilícitos graves.'),
+(231, 'Legislação', 'Lei dos Serviços Digitais da União Europeia (Digital Services Act, 2022) — Obriga as grandes plataformas a avaliar os riscos sistêmicos de seus serviços, a dar transparência aos algoritmos de recomendação e a oferecer aos usuários canais efetivos de contestação das decisões de moderação.'),
+-- Tema 116 (Celulares nas escolas)
+(232, 'Legislação', 'Lei nº 15.100/2025 — Restringe o uso de aparelhos eletrônicos portáteis pessoais por estudantes da educação básica durante as aulas, o recreio e os intervalos, admitindo exceções para fins pedagógicos, de acessibilidade e de saúde.'),
+(233, 'Psicologia', 'Jonathan Haidt, psicólogo social da Universidade de Nova York e autor de "A Geração Ansiosa" (2024), associa a substituição da "infância baseada no brincar" pela "infância baseada no celular" ao aumento expressivo de ansiedade, depressão e autolesão entre adolescentes a partir de 2012.'),
+
+-- Tema 117 (Permanência de cotistas)
+(234, 'Legislação', 'Lei de Cotas (Lei nº 12.711/2012), atualizada pela Lei nº 14.723/2023 — A revisão incluiu estudantes quilombolas entre os beneficiários e determinou que os cotistas em situação de vulnerabilidade tenham prioridade no recebimento de auxílio estudantil.'),
+(235, 'Sociologia', 'Pierre Bourdieu e Jean-Claude Passeron, em "Os Herdeiros" (1964), demonstram que o sucesso universitário depende do capital cultural herdado da família, de modo que a instituição transforma vantagens de origem social em supostos dons e méritos individuais.'),
+-- Tema 118 (Homeschooling)
+(236, 'Direito', 'Recurso Extraordinário nº 888.815 (STF, 2018) — O Supremo decidiu que o ensino domiciliar não pode ser praticado no Brasil enquanto não houver lei federal que o regulamente, com mecanismos de avaliação e de fiscalização pelo poder público.'),
+(237, 'Filosofia', 'Hannah Arendt, no ensaio "A Crise na Educação" (1958), presente em "Entre o Passado e o Futuro", define a escola como a instituição que faz a transição entre o espaço privado da família e o mundo público, preparando as novas gerações para a vida em comum.'),
+-- Tema 119 (Educação em sexualidade e abuso infantil)
+(238, 'Pesquisa', 'Anuário Brasileiro de Segurança Pública (Fórum Brasileiro de Segurança Pública) — Revela, edição após edição, que a maioria das vítimas de estupro no país são crianças e adolescentes de até 13 anos, e que a maior parte desses crimes ocorre dentro da residência, cometida por familiares ou conhecidos.'),
+(239, 'Legislação', 'Lei nº 13.431/2017 (Lei da Escuta Protegida) — Estabelece a escuta especializada e o depoimento especial de crianças e adolescentes vítimas ou testemunhas de violência, para evitar que relatem o trauma repetidas vezes e sejam revitimizados pelas instituições.'),
+
+-- Tema 120 (Incêndios no Pantanal)
+(240, 'Pesquisa', 'Incêndios de 2020 no Pantanal — Cerca de 30% do bioma foi consumido pelo fogo; estudo publicado na revista Scientific Reports (2021) estimou que aproximadamente 17 milhões de animais vertebrados morreram diretamente em decorrência das queimadas.'),
+(241, 'Legislação', 'Lei nº 14.944/2024 (Política Nacional de Manejo Integrado do Fogo) — Regula o uso do fogo no meio rural, prevê queimas prescritas e controladas e reconhece o conhecimento de povos indígenas e comunidades tradicionais no manejo preventivo dos incêndios.'),
+-- Tema 121 (Desperdício de alimentos)
+(242, 'Pesquisa', 'Relatório "Food Waste Index" (Programa das Nações Unidas para o Meio Ambiente, 2024) — Estimou que, em 2022, mais de 1 bilhão de toneladas de alimentos foram desperdiçadas no mundo, cerca de 19% de tudo o que estava disponível aos consumidores, enquanto 783 milhões de pessoas passavam fome.'),
+(243, 'Legislação', 'Lei nº 14.016/2020 — Autoriza e regulamenta a doação de alimentos excedentes por restaurantes, supermercados e demais estabelecimentos, limitando a responsabilidade do doador e removendo o principal entrave jurídico que levava ao descarte de comida própria para consumo.'),
+-- Tema 122 (Poluição do ar)
+(244, 'Saúde Coletiva', 'Organização Mundial da Saúde — Associa a poluição do ar, externa e doméstica, a cerca de 7 milhões de mortes prematuras por ano no mundo; em 2021, a entidade tornou mais rigorosas suas diretrizes de qualidade do ar diante das evidências de danos mesmo em baixas concentrações.'),
+(245, 'Legislação', 'Lei nº 14.850/2024 (Política Nacional de Qualidade do Ar) — Estabelece padrões nacionais de qualidade do ar, obriga o monitoramento contínuo e a divulgação pública dos dados e prevê planos de controle de emissões nos estados.'),
+
+-- Tema 123 (Acessibilidade e pessoas com deficiência)
+(246, 'Legislação', 'Lei nº 8.213/1991, artigo 93 (Lei de Cotas para Pessoas com Deficiência) — Obriga empresas com 100 ou mais empregados a reservar de 2% a 5% de seus cargos a pessoas com deficiência ou reabilitadas, percentual ainda descumprido por grande parte do setor privado.'),
+(247, 'Sociologia', 'Michael Oliver, sociólogo britânico autor de "The Politics of Disablement" (1990), formulou o modelo social da deficiência: a exclusão não decorre do corpo ou da lesão, mas das barreiras arquitetônicas, comunicacionais e atitudinais impostas pela sociedade.'),
+-- Tema 124 (Pobreza menstrual)
+(248, 'Pesquisa', 'Relatório "Pobreza Menstrual no Brasil: desigualdades e violações de direitos" (UNICEF e UNFPA, 2021) — Aponta que mais de 700 mil meninas vivem sem acesso a banheiro em casa e que cerca de 4 milhões sofrem ao menos uma privação de higiene menstrual nas escolas.'),
+(249, 'Legislação', 'Lei nº 14.214/2021 (Programa de Proteção e Promoção da Saúde Menstrual) — Regulamentada pelo Decreto nº 11.432/2023, garante a distribuição gratuita de absorventes a estudantes de baixa renda, pessoas em situação de rua e em privação de liberdade, inclusive pelo programa Farmácia Popular.'),
+-- Tema 125 (Racismo no mercado de trabalho)
+(250, 'Pesquisa', 'Estudo "Desigualdades Sociais por Cor ou Raça no Brasil" (IBGE, 2019) — Revelou que pessoas brancas ocupavam 68,6% dos cargos gerenciais do país, contra apenas 29,9% ocupados por pretos ou pardos, embora estes sejam a maioria da população.'),
+(251, 'Sociologia', 'Florestan Fernandes, sociólogo da USP, em "A Integração do Negro na Sociedade de Classes" (1964), demonstra que a abolição sem políticas de terra, educação e trabalho lançou a população negra à marginalidade, enquanto imigrantes europeus foram preferidos no mercado de trabalho livre.'),
+
+-- Tema 126 (Cordel e cultura nordestina)
+(252, 'História', 'Registro da Literatura de Cordel como Patrimônio Cultural Imaterial do Brasil (IPHAN, 2018) — O reconhecimento destacou o cordel como forma de expressão poética que, por mais de um século, informou, entreteve e alfabetizou gerações no Nordeste.'),
+(253, 'Literatura', 'Patativa do Assaré (1909–2002), poeta cearense e agricultor autor de "Cante Lá que Eu Canto Cá" (1978), produziu uma obra de alta elaboração poética em linguagem sertaneja, denunciando a seca, o latifúndio e a desigualdade entre o Nordeste e o Sul do país.'),
+-- Tema 127 (Futebol feminino)
+(254, 'História', 'Decreto-Lei nº 3.199/1941 — Proibiu as mulheres de praticarem esportes considerados "incompatíveis com as condições de sua natureza"; o futebol feminino permaneceu vetado no Brasil até 1979 e só foi regulamentado em 1983.'),
+(255, 'Esporte', 'Marta Vieira da Silva, eleita seis vezes a melhor jogadora do mundo pela FIFA, fez um apelo após a eliminação na Copa do Mundo de 2019 para que as novas gerações valorizassem o futebol feminino, afirmando que era preciso "chorar no começo para sorrir no fim".'),
+-- Tema 128 (História indígena e afro-brasileira nos currículos)
+(256, 'Legislação', 'Lei nº 11.645/2008 — Ampliou a Lei nº 10.639/2003 e tornou obrigatório o estudo da história e da cultura afro-brasileira e indígena em todo o ensino fundamental e médio, público e privado.'),
+(257, 'Antropologia', 'Daniel Munduruku, escritor e educador indígena autor de dezenas de livros, critica o termo genérico "índio" ensinado nas escolas por apagar a diversidade de povos que, segundo o Censo de 2010 do IBGE, somam 305 etnias e 274 línguas no território brasileiro.'),
+
+-- Tema 129 (Superendividamento)
+(258, 'Legislação', 'Lei do Superendividamento (Lei nº 14.181/2021) — Alterou o Código de Defesa do Consumidor para garantir a preservação do mínimo existencial, coibir o assédio na oferta de crédito e permitir a repactuação conjunta das dívidas com todos os credores.'),
+(259, 'Pesquisa', 'Mapa da Inadimplência da Serasa (2024) — Registrou mais de 70 milhões de brasileiros com contas em atraso, cerca de quatro em cada dez adultos, com destaque para dívidas com bancos, cartões de crédito e contas básicas de consumo.'),
+-- Tema 130 (Desigualdade salarial de gênero)
+(260, 'Legislação', 'Lei da Igualdade Salarial (Lei nº 14.611/2023) — Obriga empresas com 100 ou mais empregados a publicar relatórios semestrais de transparência salarial e prevê multa e plano de ação para corrigir diferenças de remuneração entre homens e mulheres na mesma função.'),
+(261, 'Economia', 'Claudia Goldin, Prêmio Nobel de Economia de 2023, demonstrou que a maior parte da diferença salarial entre homens e mulheres nos países ricos surge após o nascimento do primeiro filho, quando as mães passam a assumir funções mais flexíveis e menos remuneradas.'),
+-- Tema 131 (Automação e desemprego tecnológico)
+(262, 'Economia', 'Daron Acemoglu e Simon Johnson, laureados com o Nobel de Economia de 2024, em "Poder e Progresso" (2023), demonstram que os benefícios da tecnologia não se distribuem automaticamente: dependem de escolhas políticas que podem tanto ampliar quanto destruir a prosperidade dos trabalhadores.'),
+(263, 'Pesquisa', 'Relatório "Future of Jobs 2025" (Fórum Econômico Mundial) — Projeta que, até 2030, as transformações tecnológicas criarão 170 milhões de empregos e eliminarão 92 milhões, exigindo requalificação em massa da força de trabalho.'),
+
+-- Tema 132 (Golpes virtuais e crimes cibernéticos)
+(264, 'Legislação', 'Lei nº 14.155/2021 — Agravou as penas dos crimes de invasão de dispositivo informático e criou formas qualificadas de furto e estelionato praticados por meio eletrônico, com aumento de pena quando a vítima é idosa ou vulnerável.'),
+(265, 'Pesquisa', 'Anuário Brasileiro de Segurança Pública (2024) — Aponta que o estelionato, impulsionado pelos golpes virtuais, tornou-se um dos crimes que mais crescem no país, com quase 2 milhões de registros em 2023, ao mesmo tempo em que os roubos tradicionais apresentam queda.'),
+-- Tema 133 (Armas de fogo)
+(266, 'Legislação', 'Estatuto do Desarmamento (Lei nº 10.826/2003) — Restringiu o porte de armas por civis e criou o registro nacional de armas; em 2005, um referendo popular rejeitou, com cerca de 64% dos votos, a proibição total do comércio de armas e munições no país.'),
+(267, 'Pesquisa', 'Daniel Cerqueira, economista do Ipea e coordenador do "Atlas da Violência", estimou que cada aumento de 1% na quantidade de armas de fogo em circulação eleva em até 2% a taxa de homicídios, contrariando a tese de que mais armas produzem mais segurança.'),
+-- Tema 134 (Tráfico de pessoas)
+(268, 'Legislação', 'Lei nº 13.344/2016 — Tipificou o tráfico de pessoas no Código Penal (art. 149-A), abrangendo as finalidades de remoção de órgãos, trabalho análogo à escravidão, servidão, adoção ilegal e exploração sexual, em consonância com o Protocolo de Palermo da ONU (2000).'),
+(269, 'Audiovisual', 'Telenovela "Salve Jorge" (2012, de Glória Perez) — Inspirada em casos reais, retratou o aliciamento de jovens brasileiras por falsas promessas de emprego e sua exploração sexual na Turquia, levando o tema do tráfico internacional de pessoas ao horário nobre da televisão.'),
+
+-- Tema 135 (Telas na primeira infância)
+(270, 'Saúde Coletiva', 'Manual "Menos Telas, Mais Saúde" (Sociedade Brasileira de Pediatria, 2019) — Recomenda evitar a exposição de crianças menores de 2 anos a telas e limitar o uso a no máximo uma hora por dia entre 2 e 5 anos, sempre com supervisão de um adulto.'),
+(271, 'Psicologia', 'Lev Vygotsky (1896–1934), psicólogo bielorrusso, demonstrou que o desenvolvimento cognitivo e da linguagem ocorre por meio da interação social, formulando o conceito de "zona de desenvolvimento proximal" — aquilo que a criança aprende com a mediação de outra pessoa.'),
+-- Tema 136 (Saúde mental de adolescentes)
+(272, 'Legislação', 'Lei nº 13.819/2019 (Política Nacional de Prevenção da Automutilação e do Suicídio) — Tornou compulsória a notificação de casos de violência autoprovocada por estabelecimentos de saúde e escolas, que devem comunicar os casos envolvendo crianças e adolescentes ao Conselho Tutelar.'),
+(273, 'Legislação', 'Lei nº 13.935/2019 — Determina que as redes públicas de educação básica contem com serviços de psicologia e de serviço social, reconhecendo a escola como espaço estratégico para a identificação precoce do sofrimento psíquico.'),
+-- Tema 137 (Creches e primeira infância)
+(274, 'Economia', 'James Heckman, Prêmio Nobel de Economia de 2000, demonstrou com a chamada "Curva de Heckman" que o retorno social do investimento em capital humano é maior quanto mais cedo ele ocorre, chegando a 13% ao ano em programas de qualidade para a primeira infância.'),
+(275, 'Legislação', 'Marco Legal da Primeira Infância (Lei nº 13.257/2016) e Plano Nacional de Educação (Lei nº 13.005/2014) — O PNE estabeleceu como meta atender ao menos 50% das crianças de até 3 anos em creches até 2024, objetivo que o país não alcançou.'),
+
+-- Tema 138 (Saneamento básico)
+(276, 'Legislação', 'Novo Marco Legal do Saneamento (Lei nº 14.026/2020) — Estabelece a meta de garantir, até 2033, o atendimento de 99% da população com água potável e de 90% com coleta e tratamento de esgoto.'),
+(277, 'Pesquisa', 'Instituto Trata Brasil, com base no Sistema Nacional de Informações sobre Saneamento — Aponta que cerca de 90 milhões de brasileiros ainda não têm acesso à coleta de esgoto e que mais de 30 milhões vivem sem abastecimento de água tratada.'),
+-- Tema 139 (Mobilidade ativa)
+(278, 'Legislação', 'Política Nacional de Mobilidade Urbana (Lei nº 12.587/2012) — Determina a prioridade dos modos de transporte não motorizados sobre os motorizados e dos serviços de transporte público coletivo sobre o transporte individual.'),
+(279, 'Urbanismo', 'Jan Gehl, arquiteto dinamarquês autor de "Cidades para Pessoas" (2010), demonstra, a partir da transformação de Copenhague, que ruas planejadas na escala do pedestre e do ciclista reduzem acidentes, poluição e isolamento social.'),
+-- Tema 140 (Condomínios fechados)
+(280, 'Antropologia', 'Teresa Caldeira, antropóloga autora de "Cidade de Muros: crime, segregação e cidadania em São Paulo" (2000), descreve os "enclaves fortificados" como espaços privatizados e vigiados que rompem com o ideal de espaço público aberto e aprofundam a segregação social.'),
+(281, 'Audiovisual', 'Filme "O Som ao Redor" (2012, dir. Kleber Mendonça Filho) — Retrata uma rua de classe média no Recife onde a contratação de seguranças privados expõe o medo, a desconfiança e as heranças da sociedade escravocrata e patriarcal na vida urbana brasileira.');
+
+-- 21. RELACIONAMENTO TEMA <-> ARGUMENTO (Temas 111 a 140)
+INSERT INTO tema_argumento (tema_id, argumento_id) VALUES
+(111, 221), (111, 222),
+(112, 223), (112, 224),
+(113, 225), (113, 226),
+(114, 227), (114, 228),
+(115, 229), (115, 230),
+(116, 231), (116, 232),
+(117, 233), (117, 234),
+(118, 235), (118, 236),
+(119, 237), (119, 238),
+(120, 239), (120, 240),
+(121, 241), (121, 242),
+(122, 243), (122, 244),
+(123, 245), (123, 246),
+(124, 247), (124, 248),
+(125, 249), (125, 250),
+(126, 251), (126, 252),
+(127, 253), (127, 254),
+(128, 255), (128, 256),
+(129, 257), (129, 258),
+(130, 259), (130, 260),
+(131, 261), (131, 262),
+(132, 263), (132, 264),
+(133, 265), (133, 266),
+(134, 267), (134, 268),
+(135, 269), (135, 270),
+(136, 271), (136, 272),
+(137, 273), (137, 274),
+(138, 275), (138, 276),
+(139, 277), (139, 278),
+(140, 279), (140, 280);
+
+-- 22. RELACIONAMENTO ARGUMENTO <-> REPERTÓRIO (Argumentos 221 a 280 <-> Repertórios 222 a 281)
+INSERT INTO argumento_repertorio (argumento_id, repertorio_id) VALUES
+(221, 222), (222, 223),
+(223, 224), (224, 225),
+(225, 226), (226, 227),
+(227, 228), (228, 229),
+(229, 230), (230, 231),
+(231, 232), (232, 233),
+(233, 234), (234, 235),
+(235, 236), (236, 237),
+(237, 238), (238, 239),
+(239, 240), (240, 241),
+(241, 242), (242, 243),
+(243, 244), (244, 245),
+(245, 246), (246, 247),
+(247, 248), (248, 249),
+(249, 250), (250, 251),
+(251, 252), (252, 253),
+(253, 254), (254, 255),
+(255, 256), (256, 257),
+(257, 258), (258, 259),
+(259, 260), (260, 261),
+(261, 262), (262, 263),
+(263, 264), (264, 265),
+(265, 266), (266, 267),
+(267, 268), (268, 269),
+(269, 270), (270, 271),
+(271, 272), (272, 273),
+(273, 274), (274, 275),
+(275, 276), (276, 277),
+(277, 278), (278, 279),
+(279, 280), (280, 281);
+
 SELECT setval('temas_id_seq', (SELECT MAX(id) FROM temas));
 SELECT setval('argumentos_id_seq', (SELECT MAX(id) FROM argumentos));
 SELECT setval('repertorios_id_seq', (SELECT MAX(id) FROM repertorios));
