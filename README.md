@@ -126,13 +126,18 @@ npm install
 cp .env.example .env     # preencha DB_USER, DB_PASS, DB_HOST, DB_PORT e DB_NAME
 ```
 
-1. No SQL Editor do banco, rode [`backend/sql/create_tables.sql`](backend/sql/create_tables.sql) e depois [`backend/sql/seed.sql`](backend/sql/seed.sql).
+1. No SQL Editor do banco, rode, nesta ordem, [`create_tables.sql`](backend/sql/create_tables.sql), [`seed.sql`](backend/sql/seed.sql) e [`seguranca.sql`](backend/sql/seguranca.sql) (RLS, índices e o usuário `redacta_app` com o mínimo de privilégios).
 2. Suba o servidor, que também serve o frontend:
 
 ```bash
 npm start                # http://localhost:3000
 npm test                 # testes do motor de recomendação
 ```
+
+### Banco de dados em produção
+
+- O backend deve conectar com o usuário `redacta_app`, e não com o `postgres`. Defina a senha dele no SQL Editor (`ALTER ROLE redacta_app PASSWORD '...'`) e use `DB_USER=redacta_app.<ref-do-projeto>`.
+- Defina `DB_SSL_CA` com o certificado da CA do Supabase para a conexão verificar o servidor (veja o [`.env.example`](backend/.env.example)).
 
 Sem o backend local, o frontend (aberto por outra porta ou por `file:`) usa a API publicada na Vercel.
 
@@ -153,10 +158,12 @@ redacta/
 │   ├── server.js            API Express (rotas, busca e favoritos)
 │   ├── recomendacao.js      motor de recomendação por relevância
 │   ├── db.js                conexão com o PostgreSQL
+│   ├── ssl.js               configuração TLS da conexão com o banco
 │   ├── .env.example         modelo das variáveis de ambiente
 │   ├── sql/
 │   │   ├── create_tables.sql
-│   │   └── seed.sql         eixos, temas, argumentos e repertórios
+│   │   ├── seed.sql         eixos, temas, argumentos e repertórios
+│   │   └── seguranca.sql    RLS, índices e usuário redacta_app
 │   └── test/                testes do motor de recomendação
 ├── frontend/
 │   ├── index.html
